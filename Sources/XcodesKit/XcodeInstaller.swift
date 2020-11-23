@@ -599,7 +599,7 @@ public final class XcodeInstaller {
                            let date = releasedVersion.releaseDate,
                            let dateFormatter = dateFormatter
                         {
-                            output += " | \(dateFormatter.string(from: date))"
+                            output += " ; \(dateFormatter.string(from: date))"
                         }
                         Current.logging.log(output)
                     }
