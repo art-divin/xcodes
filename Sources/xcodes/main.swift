@@ -56,16 +56,20 @@ let select = Command(usage: "select <version or path>",
 }
 app.add(subCommand: select)
 
-let showDateFlag = Flag(longName: "show-dates", type: String.self, description: "Print release dates for each version")
+let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
 let list = Command(usage: "list",
                    shortMessage: "List all versions of Xcode that are available to install",
-                   flags: [showDateFlag]) { _, _ in
+                   flags: [showDateFlag]) { flags, _ in
     firstly { () -> Promise<Void> in
+        var shouldPrintDates = false
+        if flags.getBool(name: "show-dates") == true {
+            shouldPrintDates = true
+        }
         if xcodeList.shouldUpdate {
-            return installer.updateAndPrint()
+            return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
         }
         else {
-            return installer.printAvailableXcodes(xcodeList.availableXcodes, installed: Current.files.installedXcodes())
+            return installer.printAvailableXcodes(xcodeList.availableXcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates)
         }
     }
     .done {
@@ -81,9 +85,14 @@ let list = Command(usage: "list",
 app.add(subCommand: list)
 
 let update = Command(usage: "update",
-                     shortMessage: "Update the list of available versions of Xcode") { _, _ in
-    firstly {
-        installer.updateAndPrint()
+                     shortMessage: "Update the list of available versions of Xcode",
+                     flags: [showDateFlag]) { flags, _ in
+    firstly { () -> Promise<Void> in
+        var shouldPrintDates = false
+        if flags.getBool(name: "show-dates") == true {
+            shouldPrintDates = true
+        }
+        return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
     }
     .catch { error in
         print(error.legibleLocalizedDescription)
@@ -95,7 +104,7 @@ let update = Command(usage: "update",
 app.add(subCommand: update)
 
 func downloadCommand(shouldInstall: Bool) -> Command {
-    let urlFlag = Flag(longName: "url", type: String.self, description: "Local path to Xcode .xip")
+    let pathFlag = Flag(longName: "path", type: String.self, description: "Local path to Xcode .xip")
     let latestFlag = Flag(longName: "latest", value: false, description: "Update and then install the latest non-prerelease version available.")
     let latestPrereleaseFlag = Flag(longName: "latest-prerelease", value: false, description: "Update and then install the latest prerelease version available, including GM seeds and GMs.")
     let aria2 = Flag(longName: "aria2", type: String.self, description: "The path to an aria2 executable. Defaults to /usr/local/bin/aria2c.")
@@ -109,7 +118,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
 
                           By default, xcodes will use a URLSession to download the specified version. If aria2 (https://aria2.github.io, available in Homebrew) is installed, either at /usr/local/bin/aria2c or at the path specified by the --aria2 flag, then it will be used instead. aria2 will use up to 16 connections to download Xcode 3-5x faster. If you have aria2 installed and would prefer to not use it, you can use the --no-aria2 flag.
                           """,
-                          flags: [urlFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2],
+                          flags: [pathFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2],
                           example: """
                                    xcodes \(commandName) 10.2.1
                                    xcodes \(commandName) 11 Beta 7
@@ -124,7 +133,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             installation = .latest
         } else if flags.getBool(name: "latest-prerelease") == true {
             installation = .latestPrerelease
-        } else if let url = flags.getString(name: "url"), let path = Path(url) {
+        } else if let url = flags.getString(name: "path"), let path = Path(url) {
             installation = .url(versionString, path)
         } else {
             installation = .version(versionString)
