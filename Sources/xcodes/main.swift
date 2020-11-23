@@ -62,7 +62,7 @@ let list = Command(usage: "list",
                    flags: [showDateFlag]) { flags, _ in
     firstly { () -> Promise<Void> in
         var shouldPrintDates = false
-        if flags.getBool(name: "show-dates") == true {
+        if flags.getBool(name: "print-dates") == true {
             shouldPrintDates = true
         }
         if xcodeList.shouldUpdate {
@@ -89,7 +89,7 @@ let update = Command(usage: "update",
                      flags: [showDateFlag]) { flags, _ in
     firstly { () -> Promise<Void> in
         var shouldPrintDates = false
-        if flags.getBool(name: "show-dates") == true {
+        if flags.getBool(name: "print-dates") == true {
             shouldPrintDates = true
         }
         return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
