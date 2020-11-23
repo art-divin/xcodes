@@ -59,8 +59,8 @@ func select() -> Command {
     }
 }
 
-let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
 func list() -> Command {
+    let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
     return Command(usage: "list",
                    shortMessage: "List all versions of Xcode that are available to install",
                    flags: [showDateFlag]) { flags, _ in
@@ -89,6 +89,7 @@ func list() -> Command {
 }
 
 func update() -> Command {
+    let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
     return Command(usage: "update",
                    shortMessage: "Update the list of available versions of Xcode",
                    flags: [showDateFlag]) { flags, _ in
