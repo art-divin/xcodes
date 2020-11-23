@@ -139,22 +139,35 @@ public final class XcodeInstaller {
         case aria2(Path)
     }
 
-    public func install(_ installationType: InstallationType, downloader: Downloader) -> Promise<Void> {
+    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true) -> Promise<Void> {
         return firstly { () -> Promise<InstalledXcode> in
-            return self.install(installationType, downloader: downloader, attemptNumber: 0)
+            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall)
         }
         .done { xcode in
-            Current.logging.log("\nXcode \(xcode.version.descriptionWithoutBuildMetadata) has been installed to \(xcode.path.string)")
+            if shouldInstall {
+                Current.logging.log("\nXcode \(xcode.version.descriptionWithoutBuildMetadata) has been installed to \(xcode.path.string)")
+            } else {
+                Current.logging.log("\nXcode \(xcode.version.descriptionWithoutBuildMetadata) has been downloaded to \(xcode.path.string)")
+            }
             Current.shell.exit(0)
         }
     }
     
-    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int) -> Promise<InstalledXcode> {
+    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool = true) -> Promise<InstalledXcode> {
         return firstly { () -> Promise<(Xcode, URL)> in
             return self.getXcodeArchive(installationType, downloader: downloader)
         }
         .then { xcode, url -> Promise<InstalledXcode> in
-            return self.installArchivedXcode(xcode, at: url)
+            if shouldInstall {
+                return self.installArchivedXcode(xcode, at: url)
+            }
+            return Promise<InstalledXcode> {
+                guard let path = Path(url: url) else {
+                    $0.reject(Error.damagedXIP(url: url))
+                    return
+                }
+                $0.fulfill(.init(path: path, version: xcode.version))
+            }
         }
         .recover { error -> Promise<InstalledXcode> in
             switch error {
