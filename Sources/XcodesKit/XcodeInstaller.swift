@@ -575,7 +575,7 @@ public final class XcodeInstaller {
         return Current.shell.xcodeSelectPrintPath()
             .done { output in
                 let selectedInstalledXcodeVersion = installedXcodes.first { output.out.hasPrefix($0.path.string) }.map { $0.version }
-                let dateFormatter : DateFormatter? = shouldPrintDates ? .init() : nil
+                let dateFormatter : DateFormatter? = shouldPrintDates ? .downloadsReleaseDate : nil
                 allXcodeVersions
                     .sorted { first, second -> Bool in
                         // Sort prereleases by release date, otherwise sort by version
@@ -599,7 +599,7 @@ public final class XcodeInstaller {
                            let date = releasedVersion.releaseDate,
                            let dateFormatter = dateFormatter
                         {
-                            output += " \(dateFormatter.string(from: date))"
+                            output += " | \(dateFormatter.string(from: date))"
                         }
                         Current.logging.log(output)
                     }
