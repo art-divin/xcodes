@@ -128,7 +128,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
                                    xcodes \(commandName) 10.2.1
                                    xcodes \(commandName) 11 Beta 7
                                    xcodes \(commandName) 11.2 GM seed
-                                   xcodes \(commandName) 9.0 --url ~/Archive/Xcode_9.xip
+                                   xcodes \(commandName) 9.0 --path ~/Archive/Xcode_9.xip
                                    xcodes \(commandName) --latest-prerelease
                                    """) { flags, args in
         let versionString = args.joined(separator: " ")
