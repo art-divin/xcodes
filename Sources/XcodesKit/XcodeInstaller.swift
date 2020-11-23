@@ -539,17 +539,17 @@ public final class XcodeInstaller {
         }
     }
 
-    public func updateAndPrint() -> Promise<Void> {
+    public func updateAndPrint(shouldPrintDates: Bool) -> Promise<Void> {
         update()
             .then { xcodes -> Promise<Void> in
-                self.printAvailableXcodes(xcodes, installed: Current.files.installedXcodes())
+                self.printAvailableXcodes(xcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates)
             }
             .done {
                 Current.shell.exit(0)
             }
     }
 
-    public func printAvailableXcodes(_ xcodes: [Xcode], installed installedXcodes: [InstalledXcode]) -> Promise<Void> {
+    public func printAvailableXcodes(_ xcodes: [Xcode], installed installedXcodes: [InstalledXcode], shouldPrintDates: Bool) -> Promise<Void> {
         struct ReleasedVersion {
             let version: Version
             let releaseDate: Date?
@@ -575,7 +575,7 @@ public final class XcodeInstaller {
         return Current.shell.xcodeSelectPrintPath()
             .done { output in
                 let selectedInstalledXcodeVersion = installedXcodes.first { output.out.hasPrefix($0.path.string) }.map { $0.version }
-
+                let dateFormatter : DateFormatter? = shouldPrintDates ? .init() : nil
                 allXcodeVersions
                     .sorted { first, second -> Bool in
                         // Sort prereleases by release date, otherwise sort by version
@@ -586,6 +586,7 @@ public final class XcodeInstaller {
                     }
                     .forEach { releasedVersion in
                         var output = releasedVersion.version.xcodeDescription
+                        
                         if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
                             if releasedVersion.version == selectedInstalledXcodeVersion {
                                 output += " (Installed, Selected)"
@@ -593,6 +594,12 @@ public final class XcodeInstaller {
                             else {
                                 output += " (Installed)"
                             }
+                        }
+                        if shouldPrintDates,
+                           let date = releasedVersion.releaseDate,
+                           let dateFormatter = dateFormatter
+                        {
+                            output += " \(dateFormatter.string(from: date))"
                         }
                         Current.logging.log(output)
                     }

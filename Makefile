@@ -27,7 +27,7 @@ xcodes: $(SOURCES)
 .PHONY: sign
 sign: xcodes
 	@codesign \
-		--sign "Developer ID Application: Robots and Pencils Inc. (PBH8V487HB)" \
+		--sign "Developer ID Application: Ruslan Alikhamov (33V5K4Z5BG)" \
 		--prefix com.robotsandpencils. \
 		--options runtime \
 		--timestamp \

@@ -56,8 +56,10 @@ let select = Command(usage: "select <version or path>",
 }
 app.add(subCommand: select)
 
+let showDateFlag = Flag(longName: "show-dates", type: String.self, description: "Print release dates for each version")
 let list = Command(usage: "list",
-                   shortMessage: "List all versions of Xcode that are available to install") { _, _ in
+                   shortMessage: "List all versions of Xcode that are available to install",
+                   flags: [showDateFlag]) { _, _ in
     firstly { () -> Promise<Void> in
         if xcodeList.shouldUpdate {
             return installer.updateAndPrint()
