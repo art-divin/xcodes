@@ -139,7 +139,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             installation = .latest
         } else if flags.getBool(name: "latest-prerelease") == true {
             installation = .latestPrerelease
-        } else if let url = flags.getString(name: "path"), let path = Path(url) {
+        } else if let pathString = flags.getString(name: "path"), let path = Path(pathString) {
             installation = .url(versionString, path)
         } else {
             installation = .version(versionString)
