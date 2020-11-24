@@ -224,7 +224,21 @@ public struct Files {
     }
 
     public var installedXcodes = XcodesKit.installedXcodes
+    public var downloadedXips = XcodesKit.downloadedXips
 }
+
+private func downloadedXips() -> [DownloadedXip] {
+    ((try? Path.applicationSupport.ls()) ?? [])
+        .files
+        .filter {
+            $0.extension == "xip"
+        }
+        .map { $0.path }
+        .compactMap {
+            DownloadedXip.init(path: $0, version: $0.version)
+        }
+}
+
 private func installedXcodes() -> [InstalledXcode] {
     ((try? Path.root.join("Applications").ls()) ?? [])
         .filter { $0.isAppBundle && $0.infoPlist?.bundleID == "com.apple.dt.Xcode" }

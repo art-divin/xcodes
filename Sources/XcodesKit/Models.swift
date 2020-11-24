@@ -2,16 +2,41 @@ import Foundation
 import Path
 import Version
 
-public struct InstalledXcode: Equatable {
-    public let path: Path
+public struct DownloadedXip : Equatable {
+    
+    public var path: Path
     /// Composed of the bundle short version from Info.plist and the product build version from version.plist
-    public let version: Version
+    public var version: Version
     
     init(path: Path, version: Version) {
         self.path = path
         self.version = version
     }
+    
+    init?(path: Path) {
+        self.path = path
+        
+        var name = path.basename(dropExtension: true)
+        
+        let numberSet = CharacterSet.decimalDigits.inverted
+        
+        let strippedVersion = name.
+        
+    }
+    
+}
 
+public struct InstalledXcode: Equatable {
+    
+    public var path: Path
+    /// Composed of the bundle short version from Info.plist and the product build version from version.plist
+    public var version: Version
+    
+    init(path: Path, version: Version) {
+        self.path = path
+        self.version = version
+    }
+ 
     public init?(path: Path) {
         self.path = path
 

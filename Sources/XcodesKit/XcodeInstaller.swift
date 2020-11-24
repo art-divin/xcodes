@@ -493,6 +493,20 @@ public final class XcodeInstaller {
         }
     }
 
+    public func removeXip(_ versionString: String) -> Promise<Void> {
+        return firstly { () -> Promise<(InstalledXcode, URL)> in
+            
+            let path = Path.xcodesApplicationSupport
+            let xcodePath = path.join(versionString)
+            
+            if xcodePath.exists {
+                
+            }
+            
+            
+        }
+    }
+    
     public func uninstallXcode(_ versionString: String) -> Promise<Void> {
         return firstly { () -> Promise<(InstalledXcode, URL)> in
             guard let version = Version(xcodeVersion: versionString) else {
