@@ -505,7 +505,15 @@ public final class XcodeInstaller {
         }
         .then { xcodes -> Promise<URL?> in
             let version = Version(tolerant: versionString)
-            if let filtered = xcodes.first(where: { $0.version == version }) {
+            
+            //            Xcode-12.3.0-beta+12C5020f.xip.aria2
+            //            Xcode-12.3.0-beta+12C5020f.xip
+            
+            if let filtered = xcodes.first(where: {
+                print("\($0.version) == \(version)")
+                return $0.version == version
+                
+            }) {
                 let url = try Current.files.trashItem(at: filtered.path.url)
                 return Promise<URL?> { $0.fulfill(url) }
             }

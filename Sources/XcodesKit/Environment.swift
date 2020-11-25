@@ -228,12 +228,13 @@ public struct Files {
 }
 
 private func downloadedXips() -> [DownloadedXip] {
-    ((try? Path.applicationSupport.ls()) ?? [])
+    ((try? Path.xcodesApplicationSupport.ls()) ?? [])
         .files
         .filter {
-            $0.extension == "xip"
+            print($0.extension)
+            return $0.extension == "xip" || $0.extension == ".aria2"
         }
-        .map { $0.path }
+        .map { $0 }
         .compactMap(DownloadedXip.init)
 }
 
