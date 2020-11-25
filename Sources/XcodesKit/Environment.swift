@@ -234,9 +234,7 @@ private func downloadedXips() -> [DownloadedXip] {
             $0.extension == "xip"
         }
         .map { $0.path }
-        .compactMap {
-            DownloadedXip.init(path: $0, version: $0.version)
-        }
+        .compactMap(DownloadedXip.init)
 }
 
 private func installedXcodes() -> [InstalledXcode] {

@@ -492,18 +492,32 @@ public final class XcodeInstaller {
             self.installComponents(for: xcode, passwordInput: passwordInput).map { xcode }
         }
     }
+    
+    private func downloadedXips() -> Promise<[DownloadedXip]> {
+        return firstly { () -> Promise<[DownloadedXip]> in
+            return Promise<[DownloadedXip]> { $0.fulfill(Current.files.downloadedXips()) }
+        }
+    }
 
     public func removeXip(_ versionString: String) -> Promise<Void> {
-        return firstly { () -> Promise<(InstalledXcode, URL)> in
-            
-            let path = Path.xcodesApplicationSupport
-            let xcodePath = path.join(versionString)
-            
-            if xcodePath.exists {
-                
+        return firstly { () -> Promise<[DownloadedXip]> in
+            return self.downloadedXips()
+        }
+        .then { xcodes -> Promise<URL?> in
+            let version = Version(tolerant: versionString)
+            if let filtered = xcodes.first(where: { $0.version == version }) {
+                let url = try Current.files.trashItem(at: filtered.path.url)
+                return Promise<URL?> { $0.fulfill(url) }
             }
-            
-            
+            return Promise<URL?> { $0.fulfill(nil) }
+        }
+        .done { url in
+            if let url = url {
+                Current.logging.log("Xip for Xcode \(versionString) moved to Trash: \(url.path)")
+            } else {
+                Current.logging.log("Xip for Xcode \(versionString) not found")
+            }
+            Current.shell.exit(0)
         }
     }
     

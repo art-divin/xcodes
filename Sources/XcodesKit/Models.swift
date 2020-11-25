@@ -16,12 +16,22 @@ public struct DownloadedXip : Equatable {
     init?(path: Path) {
         self.path = path
         
-        var name = path.basename(dropExtension: true)
+        let name = path.basename(dropExtension: true)
+        let version = name.replacingOccurrences(of: "Xcode-", with: "")
         
-        let numberSet = CharacterSet.decimalDigits.inverted
-        
-        let strippedVersion = name.
-        
+        guard let filenameVersion = Version(version) else {
+            return nil
+        }
+        var prereleaseIdentifiers = filenameVersion.prereleaseIdentifiers
+        if prereleaseIdentifiers.isEmpty && name.localizedCaseInsensitiveContains("beta") {
+            prereleaseIdentifiers = ["beta"]
+        }
+        guard let file = Version(tolerant: version) else { return nil }
+        self.version = Version(major: file.major,
+                               minor: file.minor,
+                               patch: file.patch,
+                               prereleaseIdentifiers: prereleaseIdentifiers,
+                               buildMetadataIdentifiers: [])
     }
     
 }

@@ -18,7 +18,7 @@ migrateApplicationSupportFiles()
 // But it doesn't even print the help without the user providing the --help flag,
 // so we need to tell it to do this explicitly
 var app: Command!
-app = Command(usage: "xcodes") { _, _ in print(GuakaConfig.helpGenerator.init(command: app).helpMessage) }
+app = Command(usage: "xcodes") { _, _ in Current.logging.log(GuakaConfig.helpGenerator.init(command: app).helpMessage) }
 
 func installed() -> Command {
     let installed = Command(usage: "installed",
@@ -28,7 +28,7 @@ func installed() -> Command {
                 exit(0)
             }
             .catch { error in
-                print(error.legibleLocalizedDescription)
+                Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)
             }
         
@@ -51,7 +51,7 @@ func select() -> Command {
                                   """) { flags, args in
         selectXcode(shouldPrint: flags.getBool(name: "print-path") ?? false, pathOrVersion: args.joined(separator: " "))
             .catch { error in
-                print(error.legibleLocalizedDescription)
+                Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)
             }
         
@@ -80,7 +80,7 @@ func list() -> Command {
             exit(0)
         }
         .catch { error in
-            print(error.legibleLocalizedDescription)
+            Current.logging.log(error.legibleLocalizedDescription)
             exit(1)
         }
         
@@ -101,7 +101,7 @@ func update() -> Command {
             return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
         }
         .catch { error in
-            print(error.legibleLocalizedDescription)
+            Current.logging.log(error.legibleLocalizedDescription)
             exit(1)
         }
         
@@ -140,7 +140,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
         } else if flags.getBool(name: "latest-prerelease") == true {
             installation = .latestPrerelease
         } else if let pathString = flags.getString(name: "path"), let path = Path(pathString) {
-            installation = .url(versionString, path)
+            installation = .path(versionString, path)
         } else {
             installation = .version(versionString)
         }
@@ -177,7 +177,7 @@ func uninstall() -> Command {
         let versionString = args.joined(separator: " ")
         installer.uninstallXcode(versionString)
             .catch { error in
-                print(error.legibleLocalizedDescription)
+                Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)
             }
         
@@ -188,11 +188,22 @@ func uninstall() -> Command {
 func version() -> Command {
     Command(usage: "version",
             shortMessage: "Print the version number of xcodes itself") { _, _ in
-        print(XcodesKit.version)
+        Current.logging.log(XcodesKit.version.descriptionWithoutBuildMetadata)
         exit(0)
     }
 }
 
+func removeXip() -> Command {
+    Command(usage: "remove <version>",
+            shortMessage: "Delete downloaded Xip for a specific version of Xcode",
+            example: "xcodes remove 10.2.1") { _, args in
+        let versionString = args.joined(separator: " ")
+        installer.removeXip(versionString)
+            .catch { error in
+                Current.logging.log(error.legibleLocalizedDescription)
+            }
+    }
+}
 
 func setupCommands() {
     app.add(subCommand: installed())
@@ -203,6 +214,8 @@ func setupCommands() {
     app.add(subCommand: downloadCommand(shouldInstall: false))
     app.add(subCommand: version())
     app.add(subCommand: uninstall())
+    app.add(subCommand: removeXip())
 }
 
+setupCommands()
 app.execute()
