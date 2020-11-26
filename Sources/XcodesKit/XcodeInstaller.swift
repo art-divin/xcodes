@@ -639,13 +639,13 @@ public final class XcodeInstaller {
                         
                         if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
                             if releasedVersion.version == selectedInstalledXcodeVersion {
-                                output += " (Installed, Selected" + (dateStr ?? ")")
+                                output += " (Installed, Selected" + (dateStr != nil ? ", \(dateStr!))" : ")")
                             }
                             else {
-                                output += " (Installed" + (dateStr ?? ")")
+                                output += " (Installed" + (dateStr != nil ? ", \(dateStr!))" : ")")
                             }
                         } else if let dateStr = dateStr {
-                            output += " (\(dateStr)"
+                            output += " (\(dateStr))"
                         }
                         
                         Current.logging.log(output)
