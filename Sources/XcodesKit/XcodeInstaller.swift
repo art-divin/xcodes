@@ -503,6 +503,12 @@ public final class XcodeInstaller {
         return firstly { () -> Promise<[DownloadedXip]> in
             Promise<[DownloadedXip]>.value(Current.files.downloadedXips())
         }
+        .then { list -> Promise<[DownloadedXip]> in
+            if list.isEmpty {
+                throw Error.emptyXIPPath
+            }
+            return Promise<[DownloadedXip]>.value(list)
+        }
     }
 
     public func removeXip(_ versionString: String) -> Promise<Void> {

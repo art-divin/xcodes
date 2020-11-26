@@ -117,7 +117,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
     let noAria2 = Flag(longName: "no-aria2", value: false, description: "Don't use aria2 to download Xcode, even if its available.")
     var flags = [pathFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2]
     if !shouldInstall {
-        let listDownloaded = Flag(longName: "list", value: false, description: "List downloaded Xips")
+        let listDownloaded = Flag(longName: "list", value: false, description: "List all of the downloaded Xips")
         flags.append(listDownloaded)
     }
     let commandName = shouldInstall ? "install" : "download"
@@ -158,6 +158,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
                 Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)
             }
+            RunLoop.current.run()
             return
         } else {
             installation = .version(versionString)
