@@ -115,6 +115,11 @@ func downloadCommand(shouldInstall: Bool) -> Command {
     let latestPrereleaseFlag = Flag(longName: "latest-prerelease", value: false, description: "Update and then install the latest prerelease version available, including GM seeds and GMs.")
     let aria2 = Flag(longName: "aria2", type: String.self, description: "The path to an aria2 executable. Defaults to /usr/local/bin/aria2c.")
     let noAria2 = Flag(longName: "no-aria2", value: false, description: "Don't use aria2 to download Xcode, even if its available.")
+    var flags = [pathFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2]
+    if !shouldInstall {
+        let listDownloaded = Flag(longName: "list", value: false, description: "List downloaded Xips")
+        flags.append(listDownloaded)
+    }
     let commandName = shouldInstall ? "install" : "download"
     let commandInstruction = shouldInstall ? "Download and install" : "Download"
     return Command(usage: "\(commandName) <version>",
@@ -124,7 +129,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
 
                           By default, xcodes will use a URLSession to download the specified version. If aria2 (https://aria2.github.io, available in Homebrew) is installed, either at /usr/local/bin/aria2c or at the path specified by the --aria2 flag, then it will be used instead. aria2 will use up to 16 connections to download Xcode 3-5x faster. If you have aria2 installed and would prefer to not use it, you can use the --no-aria2 flag.
                           """,
-                   flags: [pathFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2],
+                   flags: flags,
                    example: """
                                    xcodes \(commandName) 10.2.1
                                    xcodes \(commandName) 11 Beta 7
@@ -141,6 +146,19 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             installation = .latestPrerelease
         } else if let pathString = flags.getString(name: "path"), let path = Path(pathString) {
             installation = .path(versionString, path)
+        } else if flags.getBool(name: "list") == true {
+            firstly { () -> Promise<[DownloadedXip]> in
+                installer.downloadedXips()
+            }
+            .done { list in
+                Current.logging.log("Available downloaded Xips:\n\(list.map { $0.path.basename() })")
+                exit(0)
+            }
+            .catch { error in
+                Current.logging.log(error.legibleLocalizedDescription)
+                exit(1)
+            }
+            return
         } else {
             installation = .version(versionString)
         }
@@ -201,7 +219,9 @@ func removeXip() -> Command {
         installer.removeXip(versionString)
             .catch { error in
                 Current.logging.log(error.legibleLocalizedDescription)
+                exit(1)
             }
+        RunLoop.current.run()
     }
 }
 

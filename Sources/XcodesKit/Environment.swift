@@ -231,10 +231,8 @@ private func downloadedXips() -> [DownloadedXip] {
     ((try? Path.xcodesApplicationSupport.ls()) ?? [])
         .files
         .filter {
-            print($0.extension)
             return $0.extension == "xip" || $0.extension == ".aria2"
         }
-        .map { $0 }
         .compactMap(DownloadedXip.init)
 }
 

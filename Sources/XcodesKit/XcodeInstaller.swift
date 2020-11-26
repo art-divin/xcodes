@@ -11,6 +11,8 @@ public final class XcodeInstaller {
     static let XcodeCertificateAuthority = ["Software Signing", "Apple Code Signing Certification Authority", "Apple Root CA"]
 
     public enum Error: LocalizedError, Equatable {
+        case emptyXIPPath
+        case missingXIP(version: String, candidates: [String])
         case damagedXIP(url: URL)
         case failedToMoveXcodeToApplications
         case failedSecurityAssessment(xcode: InstalledXcode, output: String)
@@ -28,6 +30,10 @@ public final class XcodeInstaller {
 
         public var errorDescription: String? {
             switch self {
+            case .emptyXIPPath:
+                return "There are no downloaded XIPs available"
+            case .missingXIP(let version, let candidates):
+                return "The archive for \(version) could not be found. Possible candidates for removal: \(candidates)"
             case .damagedXIP(let url):
                 return "The archive \"\(url.lastPathComponent)\" is damaged and can't be expanded."
             case .failedToMoveXcodeToApplications:
@@ -493,38 +499,33 @@ public final class XcodeInstaller {
         }
     }
     
-    private func downloadedXips() -> Promise<[DownloadedXip]> {
+    public func downloadedXips() -> Promise<[DownloadedXip]> {
         return firstly { () -> Promise<[DownloadedXip]> in
-            return Promise<[DownloadedXip]> { $0.fulfill(Current.files.downloadedXips()) }
+            Promise<[DownloadedXip]>.value(Current.files.downloadedXips())
         }
     }
 
     public func removeXip(_ versionString: String) -> Promise<Void> {
         return firstly { () -> Promise<[DownloadedXip]> in
-            return self.downloadedXips()
+            self.downloadedXips().map { $0 }
         }
-        .then { xcodes -> Promise<URL?> in
-            let version = Version(tolerant: versionString)
-            
-            //            Xcode-12.3.0-beta+12C5020f.xip.aria2
-            //            Xcode-12.3.0-beta+12C5020f.xip
-            
+        .then { xcodes -> Promise<URL> in
+            let version = Version(versionString)
             if let filtered = xcodes.first(where: {
-                print("\($0.version) == \(version)")
-                return $0.version == version
-                
+                return $0.version == version                
             }) {
                 let url = try Current.files.trashItem(at: filtered.path.url)
-                return Promise<URL?> { $0.fulfill(url) }
+                return Promise<URL> { $0.fulfill(url) }
+            } else {
+                let candidates = xcodes.map { $0.version.description }
+                if candidates.isEmpty {
+                    throw Error.emptyXIPPath
+                }
+                throw Error.missingXIP(version: versionString, candidates: candidates)
             }
-            return Promise<URL?> { $0.fulfill(nil) }
         }
         .done { url in
-            if let url = url {
-                Current.logging.log("Xip for Xcode \(versionString) moved to Trash: \(url.path)")
-            } else {
-                Current.logging.log("Xip for Xcode \(versionString) not found")
-            }
+            Current.logging.log("Xip for Xcode \(versionString) moved to Trash: \(url.path)")
             Current.shell.exit(0)
         }
     }
@@ -622,21 +623,25 @@ public final class XcodeInstaller {
                     }
                     .forEach { releasedVersion in
                         var output = releasedVersion.version.xcodeDescription
-                        
-                        if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
-                            if releasedVersion.version == selectedInstalledXcodeVersion {
-                                output += " (Installed, Selected)"
-                            }
-                            else {
-                                output += " (Installed)"
-                            }
-                        }
+                        var dateStr : String? = nil
                         if shouldPrintDates,
                            let date = releasedVersion.releaseDate,
                            let dateFormatter = dateFormatter
                         {
-                            output += " ; \(dateFormatter.string(from: date))"
+                            dateStr = " ; \(dateFormatter.string(from: date))"
                         }
+                        
+                        if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
+                            if releasedVersion.version == selectedInstalledXcodeVersion {
+                                output += " (Installed, Selected" + (dateStr ?? ")")
+                            }
+                            else {
+                                output += " (Installed" + (dateStr ?? ")")
+                            }
+                        } else if let dateStr = dateStr {
+                            output += "(\(dateStr)"
+                        }
+                        
                         Current.logging.log(output)
                     }
             }
