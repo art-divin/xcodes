@@ -634,7 +634,7 @@ public final class XcodeInstaller {
                            let date = releasedVersion.releaseDate,
                            let dateFormatter = dateFormatter
                         {
-                            dateStr = " ; \(dateFormatter.string(from: date))"
+                            dateStr = dateFormatter.string(from: date)
                         }
                         
                         if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
