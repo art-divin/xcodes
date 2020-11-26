@@ -645,7 +645,7 @@ public final class XcodeInstaller {
                                 output += " (Installed" + (dateStr ?? ")")
                             }
                         } else if let dateStr = dateStr {
-                            output += "(\(dateStr)"
+                            output += " (\(dateStr)"
                         }
                         
                         Current.logging.log(output)
