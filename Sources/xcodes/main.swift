@@ -123,7 +123,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
     let commandName = shouldInstall ? "install" : "download"
     let commandInstruction = shouldInstall ? "Download and install" : "Download"
     return Command(usage: "\(commandName) <version>",
-                   shortMessage: "Download and install a specific version of Xcode",
+                   shortMessage: "\(commandInstruction) a specific version of Xcode",
                    longMessage: """
                           \(commandInstruction) a specific version of Xcode
 
