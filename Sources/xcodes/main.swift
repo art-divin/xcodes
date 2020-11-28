@@ -146,12 +146,17 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             installation = .latestPrerelease
         } else if let pathString = flags.getString(name: "path"), let path = Path(pathString) {
             installation = .path(versionString, path)
-        } else if flags.getBool(name: "list") == true {
+        } else {
+            installation = .version(versionString)
+        }
+        if flags.getBool(name: "list") == true {
+            let pathFlag = flags.getString(name: "path")
+            var searchPath =
             firstly { () -> Promise<[DownloadedXip]> in
                 installer.downloadedXips()
             }
             .done { list in
-                Current.logging.log("Available downloaded Xips:\n\(list.map { $0.path.basename() })")
+                Current.logging.log("Available downloaded Xips:\n\(list.map { Version($0.path.basename()) })")
                 exit(0)
             }
             .catch { error in
@@ -160,8 +165,6 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             }
             RunLoop.current.run()
             return
-        } else {
-            installation = .version(versionString)
         }
         
         var downloader = XcodeInstaller.Downloader.urlSession
@@ -199,7 +202,6 @@ func uninstall() -> Command {
                 Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)
             }
-        
         RunLoop.current.run()
     }
 }
@@ -213,11 +215,17 @@ func version() -> Command {
 }
 
 func removeXip() -> Command {
-    Command(usage: "remove <version>",
+    let path = Flag(longName: "path", type: String.self, description: "Search path to locate Xip")
+    return Command(usage: "remove <version>",
             shortMessage: "Delete downloaded Xip for a specific version of Xcode",
-            example: "xcodes remove 10.2.1") { _, args in
+            flags: [ path ], example: "xcodes remove 10.2.1") { flags, args in
         let versionString = args.joined(separator: " ")
-        installer.removeXip(versionString)
+        let pathArgument = flags.getString(name: "path")
+        let searchPath = pathArgument != nil ? Path(pathArgument!) : nil
+        installer.removeXip(versionString, searchPath: searchPath)
+            .done {
+                exit(0)
+            }
             .catch { error in
                 Current.logging.log(error.legibleLocalizedDescription)
                 exit(1)

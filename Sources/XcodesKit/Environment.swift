@@ -227,8 +227,8 @@ public struct Files {
     public var downloadedXips = XcodesKit.downloadedXips
 }
 
-private func downloadedXips() -> [DownloadedXip] {
-    ((try? Path.xcodesApplicationSupport.ls()) ?? [])
+private func downloadedXips(searchPath: Path? = nil) -> [DownloadedXip] {
+    ((try? (searchPath ?? Path.xcodesApplicationSupport).ls()) ?? [])
         .files
         .filter {
             return $0.extension == "xip" || $0.extension == "aria2"

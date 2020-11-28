@@ -499,9 +499,9 @@ public final class XcodeInstaller {
         }
     }
     
-    public func downloadedXips() -> Promise<[DownloadedXip]> {
+    public func downloadedXips(searchPath: Path? = nil) -> Promise<[DownloadedXip]> {
         return firstly { () -> Promise<[DownloadedXip]> in
-            Promise<[DownloadedXip]>.value(Current.files.downloadedXips())
+            Promise<[DownloadedXip]>.value(Current.files.downloadedXips(searchPath))
         }
         .then { list -> Promise<[DownloadedXip]> in
             if list.isEmpty {
@@ -511,9 +511,9 @@ public final class XcodeInstaller {
         }
     }
 
-    public func removeXip(_ versionString: String) -> Promise<Void> {
+    public func removeXip(_ versionString: String, searchPath: Path? = nil) -> Promise<Void> {
         return firstly { () -> Promise<[DownloadedXip]> in
-            self.downloadedXips().map { $0 }
+            self.downloadedXips(searchPath: searchPath).map { $0 }
         }
         .then { xcodes -> Promise<URL> in
             let version = Version(versionString)
