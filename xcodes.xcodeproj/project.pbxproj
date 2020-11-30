@@ -850,21 +850,21 @@
       "OBJ_199" = {
          isa = "PBXGroup";
          children = (
-            "SwiftSoup::SwiftSoup::Product",
-            "xcodes::xcodes::Product",
-            "PMKFoundation::PMKFoundation::Product",
-            "Path.swift::Path::Product",
-            "xcodes::xcodesTests::Product",
-            "LegibleError::LegibleError::Product",
-            "Version::Version::Product",
-            "xcodes::AppleAPITests::Product",
             "StringScanner::StringScanner::Product",
-            "xcodes::XcodesKit::Product",
-            "Guaka::Guaka::Product",
-            "xcodes::AppleAPI::Product",
-            "xcodes::XcodesKitTests::Product",
+            "Version::Version::Product",
             "PromiseKit::PromiseKit::Product",
-            "KeychainAccess::KeychainAccess::Product"
+            "xcodes::AppleAPITests::Product",
+            "LegibleError::LegibleError::Product",
+            "xcodes::AppleAPI::Product",
+            "xcodes::xcodes::Product",
+            "SwiftSoup::SwiftSoup::Product",
+            "xcodes::xcodesTests::Product",
+            "Path.swift::Path::Product",
+            "Guaka::Guaka::Product",
+            "PMKFoundation::PMKFoundation::Product",
+            "KeychainAccess::KeychainAccess::Product",
+            "xcodes::XcodesKit::Product",
+            "xcodes::XcodesKitTests::Product"
          );
          name = "Products";
          path = "";
@@ -965,7 +965,7 @@
                "$(inherited)",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -1006,7 +1006,7 @@
                "$(inherited)",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -3457,7 +3457,7 @@
                "$(inherited)",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -3498,7 +3498,7 @@
                "$(inherited)",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -4029,7 +4029,7 @@
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
                "@executable_path"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -4073,7 +4073,7 @@
                "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx",
                "@executable_path"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.13";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -4368,11 +4368,11 @@
       };
       "OBJ_597" = {
          isa = "PBXTargetDependency";
-         target = "xcodes::xcodesTests";
-      };
-      "OBJ_599" = {
-         isa = "PBXTargetDependency";
          target = "xcodes::XcodesKitTests";
+      };
+      "OBJ_598" = {
+         isa = "PBXTargetDependency";
+         target = "xcodes::xcodesTests";
       };
       "OBJ_6" = {
          isa = "PBXFileReference";
@@ -5147,7 +5147,7 @@
          dependencies = (
             "OBJ_596",
             "OBJ_597",
-            "OBJ_599"
+            "OBJ_598"
          );
          name = "xcodesPackageTests";
          productName = "xcodesPackageTests";

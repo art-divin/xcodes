@@ -138,25 +138,24 @@ func downloadCommand(shouldInstall: Bool) -> Command {
                                    xcodes \(commandName) --latest-prerelease
                                    """) { flags, args in
         let versionString = args.joined(separator: " ")
-        
+        let pathFlag = flags.getString(name: "path")
+        let searchPath : Path? = (pathFlag != nil) ? Path(pathFlag!) : nil
         let installation: XcodeInstaller.InstallationType
         if flags.getBool(name: "latest") == true {
             installation = .latest
         } else if flags.getBool(name: "latest-prerelease") == true {
             installation = .latestPrerelease
-        } else if let pathString = flags.getString(name: "path"), let path = Path(pathString) {
+        } else if let path = searchPath {
             installation = .path(versionString, path)
         } else {
             installation = .version(versionString)
         }
         if flags.getBool(name: "list") == true {
-            let pathFlag = flags.getString(name: "path")
-            var searchPath =
             firstly { () -> Promise<[DownloadedXip]> in
-                installer.downloadedXips()
+                installer.downloadedXips(searchPath: searchPath)
             }
             .done { list in
-                Current.logging.log("Available downloaded Xips:\n\(list.map { Version($0.path.basename()) })")
+                Current.logging.log("Available downloaded Xips:\n\(list.compactMap { Version(tolerant: $0.path.basename(dropExtension: true)) })")
                 exit(0)
             }
             .catch { error in
@@ -167,10 +166,10 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             return
         }
         
-        var downloader = XcodeInstaller.Downloader.urlSession
+        var downloader = XcodeInstaller.Downloader.urlSession(searchPath)
         let aria2Path = flags.getString(name: "aria2").flatMap(Path.init) ?? Path.root.usr.local.bin/"aria2c"
         if aria2Path.exists, flags.getBool(name: "no-aria2") != true {
-            downloader = .aria2(aria2Path)
+            downloader = .aria2(aria2Path, searchPath)
         }
         
         installer.install(installation, downloader: downloader, shouldInstall: shouldInstall)

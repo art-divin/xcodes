@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "xcodes::xcodes"
-               BuildableName = "xcodes"
-               BlueprintName = "xcodes"
+               BlueprintIdentifier = "xcodes::AppleAPI"
+               BuildableName = "AppleAPI.framework"
+               BlueprintName = "AppleAPI"
                ReferencedContainer = "container:xcodes.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "xcodes::AppleAPI"
-               BuildableName = "AppleAPI.framework"
-               BlueprintName = "AppleAPI"
+               BlueprintIdentifier = "xcodes::xcodes"
+               BuildableName = "xcodes"
+               BlueprintName = "xcodes"
                ReferencedContainer = "container:xcodes.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -60,6 +60,16 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "xcodes::AppleAPITests"
+               BuildableName = "AppleAPITests.xctest"
+               BlueprintName = "AppleAPITests"
+               ReferencedContainer = "container:xcodes.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "xcodes::xcodesTests"
                BuildableName = "xcodesTests.xctest"
                BlueprintName = "xcodesTests"
@@ -73,16 +83,6 @@
                BlueprintIdentifier = "xcodes::XcodesKitTests"
                BuildableName = "XcodesKitTests.xctest"
                BlueprintName = "XcodesKitTests"
-               ReferencedContainer = "container:xcodes.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "xcodes::AppleAPITests"
-               BuildableName = "AppleAPITests.xctest"
-               BlueprintName = "AppleAPITests"
                ReferencedContainer = "container:xcodes.xcodeproj">
             </BuildableReference>
          </TestableReference>

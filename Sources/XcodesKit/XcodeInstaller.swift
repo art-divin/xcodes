@@ -33,7 +33,7 @@ public final class XcodeInstaller {
             case .emptyXIPPath:
                 return "There are no downloaded XIPs available"
             case .missingXIP(let version, let candidates):
-                return "The archive for \(version) could not be found. Possible candidates for removal: \(candidates)"
+                return "The archive for \(version) could not be found. Possible candidates for removal:\n\(candidates)"
             case .damagedXIP(let url):
                 return "The archive \"\(url.lastPathComponent)\" is damaged and can't be expanded."
             case .failedToMoveXcodeToApplications:
@@ -148,8 +148,8 @@ public final class XcodeInstaller {
     }
     
     public enum Downloader {
-        case urlSession
-        case aria2(Path)
+        case urlSession(Path?)
+        case aria2(Path, Path?)
     }
 
     public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true) -> Promise<Void> {
@@ -250,8 +250,12 @@ public final class XcodeInstaller {
                 guard let version = Version(xcodeVersion: versionString) ?? versionFromXcodeVersionFile() else {
                     throw Error.invalidVersion(versionString)
                 }
-                let xcode = Xcode(version: version, url: path.url, filename: String(path.string.suffix(fromLast: "/")), releaseDate: nil)
-                return Promise.value((xcode, path.url))
+                if !shouldInstall {
+                    return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall)
+                } else {
+                    let xcode = Xcode(version: version, url: path.url, filename: String(path.string.suffix(fromLast: "/")), releaseDate: nil)
+                    return Promise.value((xcode, path.url))
+                }
             case .version(let versionString):
                 guard let version = Version(xcodeVersion: versionString) ?? versionFromXcodeVersionFile() else {
                     throw Error.invalidVersion(versionString)
@@ -294,7 +298,7 @@ public final class XcodeInstaller {
             let formatter = NumberFormatter(numberStyle: .percent)
             var observation: NSKeyValueObservation?
 
-            let promise = self.downloadOrUseExistingArchive(for: xcode, downloader: downloader, progressChanged: { progress in
+            let promise = self.downloadOrUseExistingArchive(for: xcode, downloader: downloader, shouldInstall: shouldInstall, progressChanged: { progress in
                 observation?.invalidate()
                 observation = progress.observe(\.fractionCompleted) { progress, _ in
                     // These escape codes move up a line and then clear to the end
@@ -386,7 +390,7 @@ public final class XcodeInstaller {
         return nil
     }
 
-    public func downloadOrUseExistingArchive(for xcode: Xcode, downloader: Downloader, progressChanged: @escaping (Progress) -> Void) -> Promise<URL> {
+    public func downloadOrUseExistingArchive(for xcode: Xcode, downloader: Downloader, shouldInstall: Bool, progressChanged: @escaping (Progress) -> Void) -> Promise<URL> {
         // Check to see if the archive is in the expected path in case it was downloaded but failed to install
         let expectedArchivePath = Path.xcodesApplicationSupport/"Xcode-\(xcode.version).\(xcode.filename.suffix(fromLast: "."))"
         // aria2 downloads directly to the destination (instead of into /tmp first) so we need to make sure that the download isn't incomplete
@@ -396,20 +400,25 @@ public final class XcodeInstaller {
             aria2DownloadIsIncomplete = true
         }
         if Current.files.fileExistsAtPath(expectedArchivePath.string), aria2DownloadIsIncomplete == false {
-            Current.logging.log("(1/6) Found existing archive that will be used for installation at \(expectedArchivePath).")
+            if !shouldInstall {
+                Current.logging.log("(1/1) Found existing archive at \(expectedArchivePath).")
+            } else {
+                Current.logging.log("(1/6) Found existing archive that will be used for installation at \(expectedArchivePath).")
+            }
             return Promise.value(expectedArchivePath.url)
         }
         else {
-            let destination = Path.xcodesApplicationSupport/"Xcode-\(xcode.version).\(xcode.filename.suffix(fromLast: "."))"
             switch downloader {
-            case .aria2(let aria2Path):
+            case .aria2(let aria2Path, let destinationPath):
+                let destination = destinationPath ?? Path.xcodesApplicationSupport/"Xcode-\(xcode.version).\(xcode.filename.suffix(fromLast: "."))"
                 return downloadXcodeWithAria2(
                     xcode,
                     to: destination,
                     aria2Path: aria2Path,
                     progressChanged: progressChanged
                 )
-            case .urlSession:
+            case .urlSession(let destinationPath):
+                let destination = destinationPath ?? Path.xcodesApplicationSupport/"Xcode-\(xcode.version).\(xcode.filename.suffix(fromLast: "."))"
                 return downloadXcodeWithURLSession(
                     xcode,
                     to: destination,
@@ -515,23 +524,28 @@ public final class XcodeInstaller {
         return firstly { () -> Promise<[DownloadedXip]> in
             self.downloadedXips(searchPath: searchPath).map { $0 }
         }
-        .then { xcodes -> Promise<URL> in
-            let version = Version(versionString)
-            if let filtered = xcodes.first(where: {
+        .then { xcodes -> Promise<[URL]> in
+            let version = Version(tolerant: versionString)
+            let filtered = xcodes.filter {
                 return $0.version == version                
-            }) {
-                let url = try Current.files.trashItem(at: filtered.path.url)
-                return Promise<URL> { $0.fulfill(url) }
+            }
+            if !filtered.isEmpty {
+                var retVal : [URL] = []
+                for url in filtered {
+                    let url = try Current.files.trashItem(at: url.path.url)
+                    retVal.append(url)
+                }
+                return Promise<[URL]> { $0.fulfill(retVal) }
             } else {
-                let candidates = xcodes.map { $0.version.description }
+                let candidates = xcodes.map { $0.path.string }
                 if candidates.isEmpty {
                     throw Error.emptyXIPPath
                 }
                 throw Error.missingXIP(version: versionString, candidates: candidates)
             }
         }
-        .done { url in
-            Current.logging.log("Xip for Xcode \(versionString) moved to Trash: \(url.path)")
+        .done { urls in
+            Current.logging.log("Xip for Xcode \(versionString) moved to Trash: \(urls.map(\.path))")
             Current.shell.exit(0)
         }
     }

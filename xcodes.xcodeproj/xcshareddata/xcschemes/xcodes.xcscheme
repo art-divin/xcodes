@@ -32,9 +32,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "xcodes::XcodesKitTests"
-               BuildableName = "XcodesKitTests.xctest"
-               BlueprintName = "XcodesKitTests"
+               BlueprintIdentifier = "xcodes::xcodesTests"
+               BuildableName = "xcodesTests.xctest"
+               BlueprintName = "xcodesTests"
                ReferencedContainer = "container:xcodes.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -52,9 +52,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "xcodes::xcodesTests"
-               BuildableName = "xcodesTests.xctest"
-               BlueprintName = "xcodesTests"
+               BlueprintIdentifier = "xcodes::XcodesKitTests"
+               BuildableName = "XcodesKitTests.xctest"
+               BlueprintName = "XcodesKitTests"
                ReferencedContainer = "container:xcodes.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -80,6 +80,28 @@
             ReferencedContainer = "container:xcodes.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "download 12.2 --path ~/Downloads/xcodes/12.2.xip"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "update"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "remove 12.1 --path ~/Downloads/xcodes/"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "download --path ~/Downloads/xcodes/ --list"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "download 12.2 --aria2 /Users/art-divin/Library/Developer/Xcode/DerivedData/XcodeUpdates-bwovpmavpszeolgkcjdbbdotrgpo/Build/Products/Debug/XcodeUpdatesInternal.framework/Resources/aria2c --path ~/Downloads/xcodes/12.2.xip"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

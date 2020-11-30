@@ -122,6 +122,7 @@ public struct Shell {
                         return seal.reject(Process.PMKError.execution(process: process, standardOutput: "", standardError: ""))
                     }
                 }
+                progress.completedUnitCount = 100
                 seal.fulfill(())
             }
         }

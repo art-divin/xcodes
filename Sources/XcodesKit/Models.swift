@@ -15,9 +15,11 @@ public struct DownloadedXip : Equatable {
     
     init?(path: Path) {
         self.path = path
-        let name = path.basename(dropExtension: true)
+        var name = path.basename(dropExtension: false)
+        name = name.replacingOccurrences(of: ".xip", with: "")
+        name = name.replacingOccurrences(of: ".aria2", with: "")
         let version = name.replacingOccurrences(of: "Xcode-", with: "")
-        guard let filenameVersion = Version(version) else {
+        guard let filenameVersion = Version(tolerant: version) else {
             print("unable to create version from: \(name)")
             return nil
         }
