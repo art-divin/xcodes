@@ -90,7 +90,7 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "remove 12.1 --path ~/Downloads/xcodes/"
+            argument = "remove 12.2 --path ~/Downloads/xcodes/"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -99,7 +99,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "download 12.2 --aria2 /Users/art-divin/Library/Developer/Xcode/DerivedData/XcodeUpdates-bwovpmavpszeolgkcjdbbdotrgpo/Build/Products/Debug/XcodeUpdatesInternal.framework/Resources/aria2c --path ~/Downloads/xcodes/12.2.xip"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

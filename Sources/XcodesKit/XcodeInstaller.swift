@@ -297,12 +297,25 @@ public final class XcodeInstaller {
             Current.logging.log("")
             let formatter = NumberFormatter(numberStyle: .percent)
             var observation: NSKeyValueObservation?
-
+            let downloadFormatter = ByteCountFormatter()
+            downloadFormatter.countStyle = .file
+            
             let promise = self.downloadOrUseExistingArchive(for: xcode, downloader: downloader, shouldInstall: shouldInstall, progressChanged: { progress in
                 observation?.invalidate()
                 observation = progress.observe(\.fractionCompleted) { progress, _ in
+                    let percent = formatter.string(from: progress.fractionCompleted)!
+                    var status = percent
+                    if let fileTotal = progress.fileTotalCount,
+                       let fileCurrent = progress.fileCompletedCount,
+                       let throughput = progress.throughput
+                    {
+                        let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal))
+                        let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent))
+                        let speed = downloadFormatter.string(fromByteCount: Int64(throughput))
+                        status += " - \(currentUnitCount) / \(totalUnitCount) @ \(speed)"
+                    }
                     // These escape codes move up a line and then clear to the end
-                    Current.logging.log("\u{1B}[1A\u{1B}[K\(InstallationStep.downloading(version: xcode.version.description, progress: formatter.string(from: progress.fractionCompleted)!, shouldInstall: shouldInstall))")
+                    Current.logging.log("\u{1B}[1A\u{1B}[K\(InstallationStep.downloading(version: xcode.version.description, progress: status, shouldInstall: shouldInstall))")
                 }
             })
 

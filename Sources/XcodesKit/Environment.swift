@@ -88,16 +88,16 @@ public struct Shell {
             defer { handle.waitForDataInBackgroundAndNotify() }
 
             let string = String(decoding: handle.availableData, as: UTF8.self)
-            let regex = try! NSRegularExpression(pattern: #"((?<percent>\d+)%\))"#)
-            let range = NSRange(location: 0, length: string.utf16.count)
-
-            guard
-                let match = regex.firstMatch(in: string, options: [], range: range),
-                let matchRange = Range(match.range(withName: "percent"), in: string),
-                let percentCompleted = Int64(string[matchRange])
-            else { return }
-
-            progress.completedUnitCount = percentCompleted
+            print(string)
+            guard let writtenProgress = XcodesProgress(string: string) else {
+                return
+            }
+            
+            progress.fileTotalCount = writtenProgress.fileTotalCount
+            progress.estimatedTimeRemaining = writtenProgress.estimatedTimeRemaining
+            progress.fileCompletedCount = writtenProgress.fileCompletedCount
+            progress.throughput = writtenProgress.throughput
+            progress.completedUnitCount = writtenProgress.percent
         }
 
         stdOutPipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
@@ -122,6 +122,7 @@ public struct Shell {
                         return seal.reject(Process.PMKError.execution(process: process, standardOutput: "", standardError: ""))
                     }
                 }
+                progress.fileCompletedCount = progress.fileTotalCount
                 progress.completedUnitCount = 100
                 seal.fulfill(())
             }
