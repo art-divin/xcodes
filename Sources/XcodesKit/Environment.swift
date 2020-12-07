@@ -87,17 +87,14 @@ public struct Shell {
 
             defer { handle.waitForDataInBackgroundAndNotify() }
 
-            let string = String(decoding: handle.availableData, as: UTF8.self)
-            print(string)
+            var string = String(decoding: handle.availableData, as: UTF8.self)
             guard let writtenProgress = XcodesProgress(string: string) else {
                 return
             }
-            
-            progress.fileTotalCount = writtenProgress.fileTotalCount
             progress.estimatedTimeRemaining = writtenProgress.estimatedTimeRemaining
-            progress.fileCompletedCount = writtenProgress.fileCompletedCount
-            progress.throughput = writtenProgress.throughput
-            progress.completedUnitCount = writtenProgress.percent
+            progress.totalUnitCount = writtenProgress.fileTotalCount ?? 0
+            progress.throughput = Int(writtenProgress.throughput ?? 0)
+            progress.completedUnitCount = writtenProgress.fileCompletedCount ?? 0
         }
 
         stdOutPipe.fileHandleForReading.waitForDataInBackgroundAndNotify()

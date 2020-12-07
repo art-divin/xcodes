@@ -84,6 +84,7 @@ public final class XcodeInstaller {
     /// A numbered step
     enum InstallationStep: CustomStringConvertible {
         case downloading(version: String, progress: String, shouldInstall: Bool)
+        case allocating(version: String, progress: String)
         case unarchiving
         case moving(destination: String)
         case trashingArchive(archiveName: String)
@@ -96,6 +97,8 @@ public final class XcodeInstaller {
 
         var message: String {
             switch self {
+            case .allocating(let version, let progress):
+                return "Allocating Xcode \(version): \(progress)"
             case .downloading(let version, let progress, _):
                 return "Downloading Xcode \(version): \(progress)"
             case .unarchiving:
@@ -113,6 +116,9 @@ public final class XcodeInstaller {
 
         var stepNumber: Int {
             switch self {
+            case .allocating:       return 1
+            case .downloading(_, _, let shouldInstall) where !shouldInstall:
+                return 2
             case .downloading:      return 1
             case .unarchiving:      return 2
             case .moving:           return 3
@@ -124,8 +130,10 @@ public final class XcodeInstaller {
 
         var stepCount: Int {
             switch self {
+                case .allocating:
+                    return 2
                 case .downloading(_, _, let shouldInstall) where !shouldInstall:
-                    return 1
+                    return 2
                 default:
                     return 6
             }
@@ -303,19 +311,30 @@ public final class XcodeInstaller {
             let promise = self.downloadOrUseExistingArchive(for: xcode, downloader: downloader, shouldInstall: shouldInstall, progressChanged: { progress in
                 observation?.invalidate()
                 observation = progress.observe(\.fractionCompleted) { progress, _ in
+                    let fileTotal = progress.totalUnitCount
+                    let fileCurrent = progress.completedUnitCount
+                    let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal))
+                    let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent))
+                    if currentUnitCount == "Zero KB" {
+                        print("hello!")
+                    }
                     let percent = formatter.string(from: progress.fractionCompleted)!
                     var status = percent
-                    if let fileTotal = progress.fileTotalCount,
-                       let fileCurrent = progress.fileCompletedCount,
-                       let throughput = progress.throughput
-                    {
-                        let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal))
-                        let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent))
-                        let speed = downloadFormatter.string(fromByteCount: Int64(throughput))
-                        status += " - \(currentUnitCount) / \(totalUnitCount) @ \(speed)"
+                    let step : InstallationStep
+                    if progress.estimatedTimeRemaining != nil {
+                        if let throughput = progress.throughput {
+                            let speed = downloadFormatter.string(fromByteCount: Int64(throughput))
+                            status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)"
+                            step = InstallationStep.downloading(version: xcode.version.description, progress: status, shouldInstall: shouldInstall)
+                        } else {
+                            return
+                        }
+                    } else {
+                        status += " - \(currentUnitCount)/\(totalUnitCount)"
+                        step = InstallationStep.allocating(version: xcode.version.description, progress: status)
                     }
                     // These escape codes move up a line and then clear to the end
-                    Current.logging.log("\u{1B}[1A\u{1B}[K\(InstallationStep.downloading(version: xcode.version.description, progress: status, shouldInstall: shouldInstall))")
+                    Current.logging.log("\u{1B}[1A\u{1B}[K\(step)")
                 }
             })
 
