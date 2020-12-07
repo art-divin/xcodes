@@ -315,9 +315,6 @@ public final class XcodeInstaller {
                     let fileCurrent = progress.completedUnitCount
                     let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal))
                     let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent))
-                    if currentUnitCount == "Zero KB" {
-                        print("hello!")
-                    }
                     let percent = formatter.string(from: progress.fractionCompleted)!
                     var status = percent
                     let step : InstallationStep
