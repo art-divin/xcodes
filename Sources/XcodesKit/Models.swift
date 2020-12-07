@@ -120,9 +120,9 @@ struct XcodesProgress {
         let kilobytes = self[keyPath: keyPath].value(regex: #"(?<kilobytes>(\d+.\d+|\d+))KiB"#, template: "kilobytes") ?? 0.0
         let megabytes = self[keyPath: keyPath].value(regex: #"(?<megabytes>(\d+.\d+|\d+))MiB"#, template: "megabytes") ?? 0.0
         let gigabytes = self[keyPath: keyPath].value(regex: #"(?<gigabytes>(\d+.\d+|\d+))GiB"#, template: "gigabytes") ?? 0.0
-        let finalKilobytes = 1_000 * abs(ceil(kilobytes))
-        let finalMegabytes = 1_000_000 * abs(ceil(megabytes))
-        let finalGigabytes = 1_000_000_000 * abs(ceil(gigabytes))
+        let finalKilobytes = 1_000 * kilobytes
+        let finalMegabytes = 1_000_000 * megabytes
+        let finalGigabytes = 1_000_000_000 * gigabytes
         return Int64(finalKilobytes + finalMegabytes + finalGigabytes)
     }
     
