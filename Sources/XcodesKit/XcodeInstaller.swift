@@ -307,21 +307,28 @@ public final class XcodeInstaller {
             var observation: NSKeyValueObservation?
             let downloadFormatter = ByteCountFormatter()
             downloadFormatter.countStyle = .file
+            let etaFormatter = RelativeDateTimeFormatter()
+            etaFormatter.unitsStyle = .short
+            etaFormatter.dateTimeStyle = .numeric
             
             let promise = self.downloadOrUseExistingArchive(for: xcode, downloader: downloader, shouldInstall: shouldInstall, progressChanged: { progress in
                 observation?.invalidate()
                 observation = progress.observe(\.fractionCompleted) { progress, _ in
                     let fileTotal = progress.totalUnitCount
                     let fileCurrent = progress.completedUnitCount
-                    let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal))
-                    let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent))
-                    let percent = formatter.string(from: progress.fractionCompleted)!
+                    let totalUnitCount = downloadFormatter.string(fromByteCount: Int64(fileTotal)).replacingOccurrences(of: " ", with: "")
+                    let currentUnitCount = downloadFormatter.string(fromByteCount: Int64(fileCurrent)).replacingOccurrences(of: " ", with: "")
+                    let percent = formatter.string(from: progress.fractionCompleted)!.replacingOccurrences(of: " ", with: "")
+                    var etaTime : String? = nil
+                    if let eta = progress.estimatedTimeRemaining {
+                        etaTime = etaFormatter.localizedString(fromTimeInterval: eta)
+                    }
                     var status = percent
                     let step : InstallationStep
                     if progress.estimatedTimeRemaining != nil {
                         if let throughput = progress.throughput {
-                            let speed = downloadFormatter.string(fromByteCount: Int64(throughput))
-                            status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)"
+                            let speed = downloadFormatter.string(fromByteCount: Int64(throughput)).replacingOccurrences(of: " ", with: "") + "/s"
+                            status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)\(etaTime != nil ? " ETA: " + etaTime! : "")"
                             step = InstallationStep.downloading(version: xcode.version.description, progress: status, shouldInstall: shouldInstall)
                         } else {
                             return
