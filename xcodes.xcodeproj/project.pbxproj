@@ -24,6 +24,7 @@
 
 /* Begin PBXBuildFile section */
 		C92D30B52576A86800A1CD0B /* String+Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92D30B42576A86800A1CD0B /* String+Regex.swift */; };
+		C9BC149B2585232F00B78829 /* Progress+JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BC149A2585232F00B78829 /* Progress+JSON.swift */; };
 		OBJ_229 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* Client.swift */; };
 		OBJ_230 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* Environment.swift */; };
 		OBJ_231 /* URLRequest+Apple.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* URLRequest+Apple.swift */; };
@@ -571,6 +572,7 @@
 
 /* Begin PBXFileReference section */
 		C92D30B42576A86800A1CD0B /* String+Regex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Regex.swift"; sourceTree = "<group>"; };
+		C9BC149A2585232F00B78829 /* Progress+JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Progress+JSON.swift"; sourceTree = "<group>"; };
 		"Guaka::Guaka::Product" /* Guaka.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Guaka.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"KeychainAccess::KeychainAccess::Product" /* KeychainAccess.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = KeychainAccess.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"LegibleError::LegibleError::Product" /* LegibleError.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = LegibleError.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -939,6 +941,7 @@
 				OBJ_15 /* DateFormatter+.swift */,
 				OBJ_16 /* Entry+.swift */,
 				OBJ_17 /* Environment.swift */,
+				C9BC149A2585232F00B78829 /* Progress+JSON.swift */,
 				OBJ_18 /* FileManager+.swift */,
 				OBJ_19 /* Foundation.swift */,
 				OBJ_20 /* Migration.swift */,
@@ -1226,7 +1229,7 @@
 			name = Dependencies;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -1244,7 +1247,6 @@
 				OBJ_222 /* notarize.sh */,
 				OBJ_223 /* DECISIONS.md */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_50 /* KeychainAccess 3.2.0 */ = {
@@ -1807,7 +1809,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_199 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -2138,6 +2140,7 @@
 				OBJ_502 /* URLRequest+Apple.swift in Sources */,
 				OBJ_503 /* URLSession+Promise.swift in Sources */,
 				OBJ_504 /* Version+.swift in Sources */,
+				C9BC149B2585232F00B78829 /* Progress+JSON.swift in Sources */,
 				OBJ_505 /* Version+Gem.swift in Sources */,
 				OBJ_506 /* Version+Xcode.swift in Sources */,
 				OBJ_507 /* Version.swift in Sources */,

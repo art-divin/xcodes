@@ -118,6 +118,8 @@ func downloadCommand(shouldInstall: Bool) -> Command {
     var flags = [pathFlag, latestFlag, latestPrereleaseFlag, aria2, noAria2]
     if !shouldInstall {
         let listDownloaded = Flag(longName: "list", value: false, description: "List all of the downloaded Xips")
+        let jsonFlag = Flag(longName: "output", type: String.self, description: "Output format (json, text)")
+        flags.append(jsonFlag)
         flags.append(listDownloaded)
     }
     let commandName = shouldInstall ? "install" : "download"
@@ -141,6 +143,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
         let pathFlag = flags.getString(name: "path")
         let searchPath : Path? = (pathFlag != nil) ? Path(pathFlag!) : nil
         let installation: XcodeInstaller.InstallationType
+        var output : XcodeInstaller.Output = .text
         if flags.getBool(name: "latest") == true {
             installation = .latest
         } else if flags.getBool(name: "latest-prerelease") == true {
@@ -149,6 +152,9 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             installation = .path(versionString, path)
         } else {
             installation = .version(versionString)
+        }
+        if let outputRaw = flags.getString(name: "output") {
+            output = XcodeInstaller.Output(rawValue: outputRaw) ?? .text
         }
         if flags.getBool(name: "list") == true {
             firstly { () -> Promise<[DownloadedXip]> in
@@ -172,7 +178,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             downloader = .aria2(aria2Path, searchPath)
         }
         
-        installer.install(installation, downloader: downloader, shouldInstall: shouldInstall)
+        installer.install(installation, downloader: downloader, shouldInstall: shouldInstall, output: output)
             .catch { error in
                 switch error {
                     case Process.PMKError.execution(let process, let standardOutput, let standardError):

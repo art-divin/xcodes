@@ -159,10 +159,15 @@ public final class XcodeInstaller {
         case urlSession(Path?)
         case aria2(Path, Path?)
     }
+    
+    public enum Output : String {
+        case text
+        case json
+    }
 
-    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true) -> Promise<Void> {
+    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true, output: Output = .text) -> Promise<Void> {
         return firstly { () -> Promise<InstalledXcode> in
-            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall)
+            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall, output: output)
         }
         .done { xcode in
             if shouldInstall {
@@ -174,9 +179,9 @@ public final class XcodeInstaller {
         }
     }
     
-    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool) -> Promise<InstalledXcode> {
+    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool, output: Output) -> Promise<InstalledXcode> {
         return firstly { () -> Promise<(Xcode, URL)> in
-            return self.getXcodeArchive(installationType, downloader: downloader, shouldInstall: shouldInstall)
+            return self.getXcodeArchive(installationType, downloader: downloader, shouldInstall: shouldInstall, output: output)
         }
         .then { xcode, url -> Promise<InstalledXcode> in
             if shouldInstall {
@@ -205,7 +210,7 @@ public final class XcodeInstaller {
                         Current.logging.log(error.legibleLocalizedDescription)
                         Current.logging.log("Removing damaged XIP and re-attempting installation.\n")
                         try Current.files.removeItem(at: damagedXIPURL)
-                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall)
+                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall, output: output)
                     }
                 }
             default:
@@ -214,7 +219,7 @@ public final class XcodeInstaller {
         }
     }
     
-    private func getXcodeArchive(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool) -> Promise<(Xcode, URL)> {
+    private func getXcodeArchive(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool, output: Output) -> Promise<(Xcode, URL)> {
         return firstly { () -> Promise<(Xcode, URL)> in
             switch installationType {
             case .latest:
@@ -231,7 +236,7 @@ public final class XcodeInstaller {
                             throw Error.versionAlreadyInstalled(installedXcode)
                         }
 
-                        return self.downloadXcode(version: latestNonPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall)
+                        return self.downloadXcode(version: latestNonPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, output: output)
                     }
             case .latestPrerelease:
                 Current.logging.log("Updating...")
@@ -252,14 +257,14 @@ public final class XcodeInstaller {
                             throw Error.versionAlreadyInstalled(installedXcode)
                         }
                         
-                        return self.downloadXcode(version: latestPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall)
+                        return self.downloadXcode(version: latestPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, output: output)
                     }
             case .path(let versionString, let path):
                 guard let version = Version(xcodeVersion: versionString) ?? versionFromXcodeVersionFile() else {
                     throw Error.invalidVersion(versionString)
                 }
                 if !shouldInstall {
-                    return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall)
+                    return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, output: output)
                 } else {
                     let xcode = Xcode(version: version, url: path.url, filename: String(path.string.suffix(fromLast: "/")), releaseDate: nil)
                     return Promise.value((xcode, path.url))
@@ -271,7 +276,7 @@ public final class XcodeInstaller {
                 if let installedXcode = Current.files.installedXcodes().first(where: { $0.version.isEqualWithoutBuildMetadataIdentifiers(to: version) }) {
                     throw Error.versionAlreadyInstalled(installedXcode)
                 }
-                return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall)
+                return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, output: output)
             }
         }
     }
@@ -284,7 +289,7 @@ public final class XcodeInstaller {
         return version
     }
 
-    private func downloadXcode(version: Version, downloader: Downloader, shouldInstall: Bool) -> Promise<(Xcode, URL)> {
+    private func downloadXcode(version: Version, downloader: Downloader, shouldInstall: Bool, output: Output) -> Promise<(Xcode, URL)> {
         return firstly { () -> Promise<Version> in
             loginIfNeeded().map { version }
         }
@@ -328,13 +333,21 @@ public final class XcodeInstaller {
                     if progress.estimatedTimeRemaining != nil {
                         if let throughput = progress.throughput {
                             let speed = downloadFormatter.string(fromByteCount: Int64(throughput)).replacingOccurrences(of: " ", with: "") + "/s"
-                            status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)\(etaTime != nil ? " ETA: " + etaTime! : "")"
+                            if output == .json, let json = progress.base64EncodedJSON {
+                                status += " - \(json)"
+                            } else {
+                                status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)\(etaTime != nil ? " ETA: " + etaTime! : "")"
+                            }
                             step = InstallationStep.downloading(version: xcode.version.description, progress: status, shouldInstall: shouldInstall)
                         } else {
                             return
                         }
                     } else {
-                        status += " - \(currentUnitCount)/\(totalUnitCount)"
+                        if output == .json, let json = progress.base64EncodedJSON {
+                            status += " - \(json)"
+                        } else {
+                            status += " - \(currentUnitCount)/\(totalUnitCount)"
+                        }
                         step = InstallationStep.allocating(version: xcode.version.description, progress: status)
                     }
                     // These escape codes move up a line and then clear to the end
