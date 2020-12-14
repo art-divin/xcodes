@@ -703,6 +703,7 @@ public final class XcodeInstaller {
                                 static let isDownloaded = State(rawValue: 1 << 2)
                                 static let isSelected = State(rawValue: 1 << 3)
                                 static let isInstalled = State(rawValue: 1 << 4)
+                                static let isUnfinished = State(rawValue: 1 << 5)
                                 static let none = State([])
                             }
                             
@@ -718,6 +719,9 @@ public final class XcodeInstaller {
                                 }
                                 if self.state.contains(.isDownloaded) {
                                     retVal.append("Downloaded")
+                                }
+                                if self.state.contains(.isUnfinished) {
+                                    retVal.append("Unfinished")
                                 }
                                 if self.state.contains(.shouldPrintDates) {
                                     retVal.append(self.dateStr != nil ? self.dateStr! : "")
@@ -747,6 +751,9 @@ public final class XcodeInstaller {
                         }
                         if downloadedXips.contains(where: { $0.version == releasedVersion.version && $0.path.extension == "xip" }) {
                             state = [state, .isDownloaded]
+                        }
+                        if downloadedXips.contains(where: { $0.version == releasedVersion.version && $0.path.extension == "aria2" }) {
+                            state = [state, .isUnfinished]
                         }
                         Current.logging.log(output + Metadata(dateStr: dateStr, state: state).output)
                     }
