@@ -334,7 +334,7 @@ public final class XcodeInstaller {
                         if let throughput = progress.throughput {
                             let speed = downloadFormatter.string(fromByteCount: Int64(throughput)).replacingOccurrences(of: " ", with: "") + "/s"
                             if output == .json, let json = progress.base64EncodedJSON {
-                                status += " - \(json)"
+                                status = json
                             } else {
                                 status += " - \(currentUnitCount)/\(totalUnitCount) @\(speed)\(etaTime != nil ? " ETA: " + etaTime! : "")"
                             }
@@ -344,7 +344,7 @@ public final class XcodeInstaller {
                         }
                     } else {
                         if output == .json, let json = progress.base64EncodedJSON {
-                            status += " - \(json)"
+                            status = json
                         } else {
                             status += " - \(currentUnitCount)/\(totalUnitCount)"
                         }
@@ -645,17 +645,17 @@ public final class XcodeInstaller {
         }
     }
 
-    public func updateAndPrint(shouldPrintDates: Bool) -> Promise<Void> {
+    public func updateAndPrint(shouldPrintDates: Bool, searchPath: Path?) -> Promise<Void> {
         update()
             .then { xcodes -> Promise<Void> in
-                self.printAvailableXcodes(xcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates)
+                self.printAvailableXcodes(xcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates, searchPath: searchPath)
             }
             .done {
                 Current.shell.exit(0)
             }
     }
 
-    public func printAvailableXcodes(_ xcodes: [Xcode], installed installedXcodes: [InstalledXcode], shouldPrintDates: Bool) -> Promise<Void> {
+    public func printAvailableXcodes(_ xcodes: [Xcode], installed installedXcodes: [InstalledXcode], shouldPrintDates: Bool, searchPath: Path?) -> Promise<Void> {
         struct ReleasedVersion {
             let version: Version
             let releaseDate: Date?
@@ -682,6 +682,7 @@ public final class XcodeInstaller {
             .done { output in
                 let selectedInstalledXcodeVersion = installedXcodes.first { output.out.hasPrefix($0.path.string) }.map { $0.version }
                 let dateFormatter : DateFormatter? = shouldPrintDates ? .downloadsReleaseDate : nil
+                let downloadedXips = Current.files.downloadedXips(searchPath)
                 allXcodeVersions
                     .sorted { first, second -> Bool in
                         // Sort prereleases by release date, otherwise sort by version
@@ -691,27 +692,63 @@ public final class XcodeInstaller {
                         return first.version < second.version
                     }
                     .forEach { releasedVersion in
-                        var output = releasedVersion.version.xcodeDescription
+                        
+                        struct Metadata {
+                            var dateStr : String?
+                            
+                            struct State : OptionSet {
+                                let rawValue: Int
+                                
+                                static let shouldPrintDates = State(rawValue: 1 << 1)
+                                static let isDownloaded = State(rawValue: 1 << 2)
+                                static let isSelected = State(rawValue: 1 << 3)
+                                static let isInstalled = State(rawValue: 1 << 4)
+                                static let none = State([])
+                            }
+                            
+                            var state : State
+                            
+                            var output : String {
+                                var retVal : [String] = []
+                                if self.state.contains(.isInstalled) {
+                                    retVal.append("Installed")
+                                }
+                                if self.state.contains(.isSelected) {
+                                    retVal.append("Selected")
+                                }
+                                if self.state.contains(.isDownloaded) {
+                                    retVal.append("Downloaded")
+                                }
+                                if self.state.contains(.shouldPrintDates) {
+                                    retVal.append(self.dateStr != nil ? self.dateStr! : "")
+                                }
+                                let joined = retVal.joined(separator: ", ")
+                                return !joined.isEmpty ? " (" + joined + ")" : ""
+                            }
+                        }
+                        var state : Metadata.State = .none
+                        let output = releasedVersion.version.xcodeDescription
                         var dateStr : String? = nil
                         if shouldPrintDates,
                            let date = releasedVersion.releaseDate,
                            let dateFormatter = dateFormatter
                         {
                             dateStr = dateFormatter.string(from: date)
+                            state = .shouldPrintDates
                         }
                         
                         if installedXcodes.contains(where: { releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: $0.version) }) {
                             if releasedVersion.version == selectedInstalledXcodeVersion {
-                                output += " (Installed, Selected" + (dateStr != nil ? ", \(dateStr!))" : ")")
+                                state = [state, .isInstalled, .isSelected]
                             }
                             else {
-                                output += " (Installed" + (dateStr != nil ? ", \(dateStr!))" : ")")
+                                state = [state, .isInstalled]
                             }
-                        } else if let dateStr = dateStr {
-                            output += " (\(dateStr))"
                         }
-                        
-                        Current.logging.log(output)
+                        if downloadedXips.contains(where: { $0.version == releasedVersion.version && $0.path.extension == "xip" }) {
+                            state = [state, .isDownloaded]
+                        }
+                        Current.logging.log(output + Metadata(dateStr: dateStr, state: state).output)
                     }
             }
     }

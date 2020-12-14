@@ -86,7 +86,11 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "update"
+            argument = "update --path ~/Downloads/xcodes/"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "list --print-dates"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -99,7 +103,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "download 12.3 Release Candidate --aria2 /Users/art-divin/Documents/projects/XcodeUpdates/XcodeUpdatesInternal/XcodeUpdatesInternal/External/aria2c --path ~/Downloads/xcodes/12.2.xip"
-            isEnabled = "YES">
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "download 12.3 Release Candidate --aria2 /Users/art-divin/Documents/projects/XcodeUpdates/XcodeUpdatesInternal/XcodeUpdatesInternal/External/aria2c --path ~/Downloads/xcodes/12.2.xip --output json"
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

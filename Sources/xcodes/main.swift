@@ -18,7 +18,7 @@ migrateApplicationSupportFiles()
 // But it doesn't even print the help without the user providing the --help flag,
 // so we need to tell it to do this explicitly
 var app: Command!
-app = Command(usage: "xcodes") { _, _ in Current.logging.log(GuakaConfig.helpGenerator.init(command: app).helpMessage) }
+app = Command(usage: "xcodes") { _, _ in print(GuakaConfig.helpGenerator.init(command: app).helpMessage) }
 
 func installed() -> Command {
     let installed = Command(usage: "installed",
@@ -61,19 +61,24 @@ func select() -> Command {
 
 func list() -> Command {
     let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
+    let pathFlag = Flag(longName: "path", type: String.self, description: "Local directory containing the downloaded Xcode .xip")
     return Command(usage: "list",
                    shortMessage: "List all versions of Xcode that are available to install",
-                   flags: [showDateFlag]) { flags, _ in
+                   flags: [showDateFlag, pathFlag]) { flags, _ in
         firstly { () -> Promise<Void> in
             var shouldPrintDates = false
+            var searchPath : Path?
             if flags.getBool(name: "print-dates") == true {
                 shouldPrintDates = true
             }
+            if let path = flags.getString(name: "path") {
+                searchPath = Path(path)
+            }
             if xcodeList.shouldUpdate {
-                return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
+                return installer.updateAndPrint(shouldPrintDates: shouldPrintDates, searchPath: searchPath)
             }
             else {
-                return installer.printAvailableXcodes(xcodeList.availableXcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates)
+                return installer.printAvailableXcodes(xcodeList.availableXcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates, searchPath: searchPath)
             }
         }
         .done {
@@ -90,15 +95,20 @@ func list() -> Command {
 
 func update() -> Command {
     let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
+    let pathFlag = Flag(longName: "path", type: String.self, description: "Local directory containing the downloaded Xcode .xip")
     return Command(usage: "update",
                    shortMessage: "Update the list of available versions of Xcode",
-                   flags: [showDateFlag]) { flags, _ in
+                   flags: [showDateFlag, pathFlag]) { flags, _ in
         firstly { () -> Promise<Void> in
             var shouldPrintDates = false
+            var searchPath : Path?
             if flags.getBool(name: "print-dates") == true {
                 shouldPrintDates = true
             }
-            return installer.updateAndPrint(shouldPrintDates: shouldPrintDates)
+            if let path = flags.getString(name: "path") {
+                searchPath = Path(path)
+            }
+            return installer.updateAndPrint(shouldPrintDates: shouldPrintDates, searchPath: searchPath)
         }
         .catch { error in
             Current.logging.log(error.legibleLocalizedDescription)
@@ -110,7 +120,7 @@ func update() -> Command {
 }
 
 func downloadCommand(shouldInstall: Bool) -> Command {
-    let pathFlag = Flag(longName: "path", type: String.self, description: "Local path to Xcode .xip")
+    let pathFlag = Flag(longName: "path", type: String.self, description: shouldInstall ? "Local path to Xcode .xip" : "Local directory containing the downloaded Xcode .xip")
     let latestFlag = Flag(longName: "latest", value: false, description: "Update and then install the latest non-prerelease version available.")
     let latestPrereleaseFlag = Flag(longName: "latest-prerelease", value: false, description: "Update and then install the latest prerelease version available, including GM seeds and GMs.")
     let aria2 = Flag(longName: "aria2", type: String.self, description: "The path to an aria2 executable. Defaults to /usr/local/bin/aria2c.")
@@ -138,6 +148,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
                                    xcodes \(commandName) 11.2 GM seed
                                    xcodes \(commandName) 9.0 --path ~/Archive/Xcode_9.xip
                                    xcodes \(commandName) --latest-prerelease
+                                   xcodes \(commandName) --output json
                                    """) { flags, args in
         let versionString = args.joined(separator: " ")
         let pathFlag = flags.getString(name: "path")
