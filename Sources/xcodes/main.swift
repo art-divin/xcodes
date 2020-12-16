@@ -121,6 +121,7 @@ func update() -> Command {
 
 func downloadCommand(shouldInstall: Bool) -> Command {
     let pathFlag = Flag(longName: "path", type: String.self, description: shouldInstall ? "Local path to Xcode .xip" : "Local directory containing the downloaded Xcode .xip")
+    
     let latestFlag = Flag(longName: "latest", value: false, description: "Update and then install the latest non-prerelease version available.")
     let latestPrereleaseFlag = Flag(longName: "latest-prerelease", value: false, description: "Update and then install the latest prerelease version available, including GM seeds and GMs.")
     let aria2 = Flag(longName: "aria2", type: String.self, description: "The path to an aria2 executable. Defaults to /usr/local/bin/aria2c.")
@@ -131,6 +132,9 @@ func downloadCommand(shouldInstall: Bool) -> Command {
         let jsonFlag = Flag(longName: "output", type: String.self, description: "Output format (json, text)")
         flags.append(jsonFlag)
         flags.append(listDownloaded)
+    } else {
+        let installationPathFlag = Flag(longName: "install-path", type: String.self, description: "Local directory for unarchiving")
+        flags.append(installationPathFlag)
     }
     let commandName = shouldInstall ? "install" : "download"
     let commandInstruction = shouldInstall ? "Download and install" : "Download"
@@ -155,6 +159,8 @@ func downloadCommand(shouldInstall: Bool) -> Command {
         let searchPath : Path? = (pathFlag != nil) ? Path(pathFlag!) : nil
         let installation: XcodeInstaller.InstallationType
         var output : XcodeInstaller.Output = .text
+        let installationPathFlag = flags.getString(name: "install-path")
+        let installationPath : Path? = (installationPathFlag != nil) ? Path(installationPathFlag!) : nil
         if flags.getBool(name: "latest") == true {
             installation = .latest
         } else if flags.getBool(name: "latest-prerelease") == true {
@@ -189,7 +195,7 @@ func downloadCommand(shouldInstall: Bool) -> Command {
             downloader = .aria2(aria2Path, searchPath)
         }
         
-        installer.install(installation, downloader: downloader, shouldInstall: shouldInstall, output: output)
+        installer.install(installation, downloader: downloader, shouldInstall: shouldInstall, output: output, installationPath: installationPath)
             .catch { error in
                 switch error {
                     case Process.PMKError.execution(let process, let standardOutput, let standardError):

@@ -165,9 +165,9 @@ public final class XcodeInstaller {
         case json
     }
 
-    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true, output: Output = .text) -> Promise<Void> {
+    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true, output: Output = .text, installationPath: Path?) -> Promise<Void> {
         return firstly { () -> Promise<InstalledXcode> in
-            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall, output: output)
+            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall, output: output, installationPath: installationPath)
         }
         .done { xcode in
             if shouldInstall {
@@ -179,13 +179,13 @@ public final class XcodeInstaller {
         }
     }
     
-    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool, output: Output) -> Promise<InstalledXcode> {
+    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool, output: Output, installationPath: Path?) -> Promise<InstalledXcode> {
         return firstly { () -> Promise<(Xcode, URL)> in
             return self.getXcodeArchive(installationType, downloader: downloader, shouldInstall: shouldInstall, output: output)
         }
         .then { xcode, url -> Promise<InstalledXcode> in
             if shouldInstall {
-                return self.installArchivedXcode(xcode, at: url)
+                return self.installArchivedXcode(xcode, at: url, installationPath: installationPath)
             }
             return Promise<InstalledXcode> {
                 guard let path = Path(url: url) else {
@@ -210,7 +210,7 @@ public final class XcodeInstaller {
                         Current.logging.log(error.legibleLocalizedDescription)
                         Current.logging.log("Removing damaged XIP and re-attempting installation.\n")
                         try Current.files.removeItem(at: damagedXIPURL)
-                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall, output: output)
+                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall, output: output, installationPath: installationPath)
                     }
                 }
             default:
@@ -508,7 +508,7 @@ public final class XcodeInstaller {
         }
     }
 
-    public func installArchivedXcode(_ xcode: Xcode, at archiveURL: URL) -> Promise<InstalledXcode> {
+    public func installArchivedXcode(_ xcode: Xcode, at archiveURL: URL, installationPath: Path?) -> Promise<InstalledXcode> {
         let passwordInput = {
             Promise<String> { seal in
                 Current.logging.log("xcodes requires superuser privileges in order to finish installation.")
@@ -518,7 +518,13 @@ public final class XcodeInstaller {
         }
 
         return firstly { () -> Promise<InstalledXcode> in
-            let destinationURL = Path.root.join("Applications").join("Xcode-\(xcode.version.descriptionWithoutBuildMetadata).app").url
+            let destinationURL : URL
+            let xcodeName = "Xcode-\(xcode.version.descriptionWithoutBuildMetadata).app"
+            if let installationPath = installationPath {
+                destinationURL = installationPath.join(xcodeName).url
+            } else {
+                destinationURL = Path.root.join("Applications").join(xcodeName).url
+            }
             switch archiveURL.pathExtension {
             case "xip":
                 return unarchiveAndMoveXIP(at: archiveURL, to: destinationURL).map { xcodeURL in
