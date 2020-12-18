@@ -87,6 +87,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "update --path ~/Downloads/xcodes/"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "unauthorize"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

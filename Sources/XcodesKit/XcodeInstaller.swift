@@ -288,6 +288,19 @@ public final class XcodeInstaller {
             .flatMap(Version.init(gemVersion:))
         return version
     }
+    
+    public func unauthorize() -> Promise<Void> {
+        return Promise<Void> { seal in
+            guard let existingUsername = configuration.defaultUsername else {
+                seal.fulfill(())
+                return
+            }
+            configuration.defaultUsername = nil
+            try configuration.save()
+            try Current.keychain.remove(existingUsername)
+            seal.fulfill(())
+        }
+    }
 
     private func downloadXcode(version: Version, downloader: Downloader, shouldInstall: Bool, output: Output) -> Promise<(Xcode, URL)> {
         return firstly { () -> Promise<Version> in

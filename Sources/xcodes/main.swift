@@ -236,6 +236,22 @@ func version() -> Command {
     }
 }
 
+func unauthorize() -> Command {
+    Command(usage: "unauthorize",
+            shortMessage: "Remove cached user credentials to developer.apple.com from Keychain") { _, _ in
+        installer.unauthorize()
+            .done {
+                Current.logging.log("Stored username and password have been removed")
+                exit(0)
+            }
+            .catch { _ in
+                Current.logging.log("Unable to remove stored username and password")
+                exit(0)
+            }
+        RunLoop.current.run()
+    }
+}
+
 func removeXip() -> Command {
     let path = Flag(longName: "path", type: String.self, description: "Search path to locate Xip")
     return Command(usage: "remove <version>",
@@ -266,6 +282,7 @@ func setupCommands() {
     app.add(subCommand: version())
     app.add(subCommand: uninstall())
     app.add(subCommand: removeXip())
+    app.add(subCommand: unauthorize())
 }
 
 setupCommands()
