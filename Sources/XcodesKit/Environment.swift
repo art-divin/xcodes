@@ -131,6 +131,7 @@ public struct Shell {
     public var readLine: (String) -> String? = { prompt in
         print(prompt, terminator: "\n")
         fflush(stdout)
+        fflush(stderr)
         return Swift.readLine()
     }
     public func readLine(prompt: String) -> String? {
@@ -266,7 +267,11 @@ public struct Network {
 }
 
 public struct Logging {
-    public var log: (String) -> Void = { print($0) }
+    public var log: (String) -> Void = {
+        print($0)
+        fflush(stdout)
+        fflush(stderr)
+    }
 }
 
 public struct Keychain {

@@ -40,5 +40,6 @@ public struct Logging {
     public var log: (String) -> Void = {
         print($0)
         fflush(stdout)
+        fflush(stderr)
     }
 }
