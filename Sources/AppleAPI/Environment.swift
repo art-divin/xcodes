@@ -37,5 +37,8 @@ public struct Network {
 }
 
 public struct Logging {
-    public var log: (String) -> Void = { print($0) }
+    public var log: (String) -> Void = {
+        print($0)
+        fflush(stdout)
+    }
 }

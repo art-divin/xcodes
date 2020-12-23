@@ -129,7 +129,8 @@ public struct Shell {
     }
 
     public var readLine: (String) -> String? = { prompt in
-        print(prompt, terminator: "")
+        print(prompt, terminator: "\n")
+        fflush(stdout)
         return Swift.readLine()
     }
     public func readLine(prompt: String) -> String? {

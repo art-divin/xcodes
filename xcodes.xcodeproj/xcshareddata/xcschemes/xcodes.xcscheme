@@ -87,11 +87,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "update --path ~/Downloads/xcodes/"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "unauthorize"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "list --print-dates"
