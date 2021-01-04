@@ -678,22 +678,23 @@ public final class XcodeInstaller {
         struct ReleasedVersion {
             let version: Version
             let releaseDate: Date?
+            let isNew : Bool
         }
 
-        var allXcodeVersions = xcodes.map { ReleasedVersion(version: $0.version, releaseDate: $0.releaseDate) }
+        var allXcodeVersions = xcodes.map { ReleasedVersion(version: $0.version, releaseDate: $0.releaseDate, isNew: $0.isNew) }
         for installedXcode in installedXcodes {
             // If an installed version isn't listed online, add the installed version
             if !allXcodeVersions.contains(where: { releasedVersion in
                 releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: installedXcode.version)
             }) {
-                allXcodeVersions.append(ReleasedVersion(version: installedXcode.version, releaseDate: nil))
+                allXcodeVersions.append(ReleasedVersion(version: installedXcode.version, releaseDate: nil, isNew: false))
             }
             // If an installed version is the same as one that's listed online which doesn't have build metadata, replace it with the installed version with build metadata
             else if let index = allXcodeVersions.firstIndex(where: { releasedVersion in
                 releasedVersion.version.isEquivalentForDeterminingIfInstalled(toInstalled: installedXcode.version) &&
                 releasedVersion.version.buildMetadataIdentifiers.isEmpty
             }) {
-                allXcodeVersions[index] = ReleasedVersion(version: installedXcode.version, releaseDate: nil)
+                allXcodeVersions[index] = ReleasedVersion(version: installedXcode.version, releaseDate: nil, isNew: false)
             }
         }
         
@@ -723,6 +724,7 @@ public final class XcodeInstaller {
                                 static let isSelected = State(rawValue: 1 << 3)
                                 static let isInstalled = State(rawValue: 1 << 4)
                                 static let isUnfinished = State(rawValue: 1 << 5)
+                                static let isNew = State(rawValue: 1 << 6)
                                 static let none = State([])
                             }
                             
@@ -741,6 +743,9 @@ public final class XcodeInstaller {
                                 }
                                 if self.state.contains(.isUnfinished) {
                                     retVal.append("Unfinished")
+                                }
+                                if self.state.contains(.isNew) {
+                                    retVal.append("New")
                                 }
                                 if self.state.contains(.shouldPrintDates) {
                                     retVal.append(self.dateStr != nil ? self.dateStr! : "")
@@ -773,6 +778,9 @@ public final class XcodeInstaller {
                         }
                         if downloadedXips.contains(where: { $0.version == releasedVersion.version && $0.path.extension == "aria2" }) {
                             state = [state, .isUnfinished]
+                        }
+                        if releasedVersion.isNew {
+                            state = [state, .isNew]
                         }
                         Current.logging.log(output + Metadata(dateStr: dateStr, state: state).output)
                     }

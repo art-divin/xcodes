@@ -191,11 +191,20 @@ public struct InstalledXcode: Equatable {
 }
 
 public struct Xcode: Codable, Equatable {
+    
+    enum KeysForSaving : CodingKey {
+        case version
+        case url
+        case filename
+        case releaseDate
+    }
+    
     public let version: Version
     public let url: URL
     public let filename: String
     public let releaseDate: Date?
-
+    public var isNew : Bool = false
+    
     public init(version: Version, url: URL, filename: String, releaseDate: Date?) {
         self.version =  version
         self.url = url

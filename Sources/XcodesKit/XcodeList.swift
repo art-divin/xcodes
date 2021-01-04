@@ -23,11 +23,26 @@ public final class XcodeList {
                 // Previously pre-release versions only appeared on developer.apple.com/download.
                 // /download/more doesn't include build numbers, so we trust that if the version number and prerelease identifiers are the same that they're the same build.
                 // If an Xcode version is listed on both sites then prefer the one on /download because the build metadata is used to compare against installed Xcodes.
-                let xcodes = releasedXcodes.filter { releasedXcode in
+                var xcodes = releasedXcodes.filter { releasedXcode in
                     prereleaseXcodes.contains { $0.version.isEqualWithoutBuildMetadataIdentifiers(to: releasedXcode.version) } == false
                 } + prereleaseXcodes
+                
+                // check if any of the downloaded Xcode versions were not in the cache prior to update()
+                // if the version was not cached before - this means that it is a new version and it should be marked like one
+                let availableXcodes = self.availableXcodes
+                let toSave = xcodes
+                if !availableXcodes.isEmpty {
+                    let new = xcodes.filter { !availableXcodes.contains($0) }
+                    new.forEach {
+                        var xcode = $0
+                        xcode.isNew = true
+                        if let idx = xcodes.firstIndex(of: $0) {
+                            xcodes[idx] = xcode
+                        }
+                    }
+                }
                 self.availableXcodes = xcodes
-                try? self.cacheAvailableXcodes(xcodes)
+                try? self.cacheAvailableXcodes(toSave)
                 return xcodes
             }
     }

@@ -17,7 +17,7 @@ public struct Environment {
     public var files = Files()
     public var network = Network()
     public var logging = Logging()
-    public var keychain = Keychain()
+    public lazy var keychain = Keychain()
 }
 
 public var Current = Environment()
