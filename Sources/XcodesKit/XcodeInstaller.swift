@@ -380,8 +380,8 @@ public final class XcodeInstaller {
         }
         .recover { error -> Promise<Void> in
             guard
-                let username = existingUsername ?? self.findUsername() ?? Current.shell.readLine(prompt: "Apple ID: "),
-                let password = self.findPassword(withUsername: username) ?? Current.shell.readSecureLine(prompt: "Apple ID Password: ")
+                let username = Current.shell.readLine(prompt: "Apple ID: "),
+                let password = Current.shell.readSecureLine(prompt: "Apple ID Password: ")
             else { throw Error.missingUsernameOrPassword }
 
             return firstly { () -> Promise<Void> in
@@ -406,7 +406,6 @@ public final class XcodeInstaller {
             Current.network.login(accountName: username, password: password)
         }
         .recover { error -> Promise<Void> in
-
             if let error = error as? Client.Error {
               switch error  {
               case .invalidUsernameOrPassword(_):
@@ -416,16 +415,7 @@ public final class XcodeInstaller {
                   break
               }
             }
-
             return Promise(error: error)
-        }
-        .done { _ in
-            try? Current.keychain.set(password, key: username)
-
-            if self.configuration.defaultUsername != username {
-                self.configuration.defaultUsername = username
-                try? self.configuration.save()
-            }
         }
     }
 

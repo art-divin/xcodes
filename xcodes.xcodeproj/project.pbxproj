@@ -568,6 +568,27 @@
 			remoteGlobalIDString = "PromiseKit::PromiseKit";
 			remoteInfo = PromiseKit;
 		};
+		C957C78725A98F6D0033BD09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "xcodes::AppleAPITests";
+			remoteInfo = AppleAPITests;
+		};
+		C957C78825A98F6D0033BD09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "xcodes::XcodesKitTests";
+			remoteInfo = XcodesKitTests;
+		};
+		C957C78925A98F6D0033BD09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "xcodes::xcodesTests";
+			remoteInfo = xcodesTests;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -760,7 +781,7 @@
 		"xcodes::AppleAPITests::Product" /* AppleAPITests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = AppleAPITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"xcodes::XcodesKit::Product" /* XcodesKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = XcodesKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"xcodes::XcodesKitTests::Product" /* XcodesKitTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = XcodesKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		"xcodes::xcodes::Product" /* xcodes */ = {isa = PBXFileReference; lastKnownFileType = text; path = xcodes; sourceTree = BUILT_PRODUCTS_DIR; };
+		"xcodes::xcodes::Product" /* xcodes */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = xcodes; sourceTree = BUILT_PRODUCTS_DIR; };
 		"xcodes::xcodesTests::Product" /* xcodesTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = xcodesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -1801,6 +1822,11 @@
 			attributes = {
 				LastSwiftMigration = 9999;
 				LastUpgradeCheck = 9999;
+				TargetAttributes = {
+					"xcodes::xcodes" = {
+						DevelopmentTeam = 33V5K4Z5BG;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "xcodes" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2368,17 +2394,17 @@
 		OBJ_596 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "xcodes::AppleAPITests" /* AppleAPITests */;
-			targetProxy = "xcodes::AppleAPITests" /* AppleAPITests */;
+			targetProxy = C957C78725A98F6D0033BD09 /* PBXContainerItemProxy */;
 		};
 		OBJ_597 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "xcodes::XcodesKitTests" /* XcodesKitTests */;
-			targetProxy = "xcodes::XcodesKitTests" /* XcodesKitTests */;
+			targetProxy = C957C78825A98F6D0033BD09 /* PBXContainerItemProxy */;
 		};
 		OBJ_598 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "xcodes::xcodesTests" /* xcodesTests */;
-			targetProxy = "xcodes::xcodesTests" /* xcodesTests */;
+			targetProxy = C957C78925A98F6D0033BD09 /* PBXContainerItemProxy */;
 		};
 		OBJ_617 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3335,6 +3361,9 @@
 		OBJ_559 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				DEVELOPMENT_TEAM = 33V5K4Z5BG;
+				ENABLE_HARDENED_RUNTIME = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
@@ -3360,6 +3389,9 @@
 		OBJ_560 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				DEVELOPMENT_TEAM = 33V5K4Z5BG;
+				ENABLE_HARDENED_RUNTIME = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
