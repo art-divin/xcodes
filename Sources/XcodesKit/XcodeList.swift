@@ -16,7 +16,7 @@ public final class XcodeList {
         return availableXcodes.isEmpty
     }
 
-    public func update() -> Promise<[Xcode]> {
+    public func update(saving: Bool) -> Promise<[Xcode]> {
         return when(fulfilled: releasedXcodes(), prereleaseXcodes())
             .map { releasedXcodes, prereleaseXcodes in
                 // Starting with Xcode 11 beta 6, developer.apple.com/download and developer.apple.com/download/more both list some pre-release versions of Xcode.
@@ -42,7 +42,9 @@ public final class XcodeList {
                     }
                 }
                 self.availableXcodes = xcodes
-                try? self.cacheAvailableXcodes(toSave)
+                if saving {
+                    try? self.cacheAvailableXcodes(toSave)
+                }
                 return xcodes
             }
     }

@@ -165,9 +165,9 @@ public final class XcodeInstaller {
         case json
     }
 
-    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true, output: Output = .text, installationPath: Path?) -> Promise<Void> {
+    public func install(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool = true, shouldCache: Bool = true, output: Output = .text, installationPath: Path?) -> Promise<Void> {
         return firstly { () -> Promise<InstalledXcode> in
-            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall, output: output, installationPath: installationPath)
+            return self.install(installationType, downloader: downloader, attemptNumber: 0, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output, installationPath: installationPath)
         }
         .done { xcode in
             if shouldInstall {
@@ -179,9 +179,9 @@ public final class XcodeInstaller {
         }
     }
     
-    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool, output: Output, installationPath: Path?) -> Promise<InstalledXcode> {
+    private func install(_ installationType: InstallationType, downloader: Downloader, attemptNumber: Int, shouldInstall: Bool, shouldCache: Bool, output: Output, installationPath: Path?) -> Promise<InstalledXcode> {
         return firstly { () -> Promise<(Xcode, URL)> in
-            return self.getXcodeArchive(installationType, downloader: downloader, shouldInstall: shouldInstall, output: output)
+            return self.getXcodeArchive(installationType, downloader: downloader, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output)
         }
         .then { xcode, url -> Promise<InstalledXcode> in
             if shouldInstall {
@@ -210,7 +210,7 @@ public final class XcodeInstaller {
                         Current.logging.log(error.legibleLocalizedDescription)
                         Current.logging.log("Removing damaged XIP and re-attempting installation.\n")
                         try Current.files.removeItem(at: damagedXIPURL)
-                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall, output: output, installationPath: installationPath)
+                        return self.install(installationType, downloader: downloader, attemptNumber: attemptNumber + 1, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output, installationPath: installationPath)
                     }
                 }
             default:
@@ -219,13 +219,13 @@ public final class XcodeInstaller {
         }
     }
     
-    private func getXcodeArchive(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool, output: Output) -> Promise<(Xcode, URL)> {
+    private func getXcodeArchive(_ installationType: InstallationType, downloader: Downloader, shouldInstall: Bool, shouldCache: Bool, output: Output) -> Promise<(Xcode, URL)> {
         return firstly { () -> Promise<(Xcode, URL)> in
             switch installationType {
             case .latest:
                 Current.logging.log("Updating...")
                 
-                return update()
+                return update(shouldCache: shouldCache)
                     .then { availableXcodes -> Promise<(Xcode, URL)> in
                         guard let latestNonPrereleaseXcode = availableXcodes.filter(\.version.isNotPrerelease).sorted(\.version).last else {
                             throw Error.noNonPrereleaseVersionAvailable
@@ -236,12 +236,12 @@ public final class XcodeInstaller {
                             throw Error.versionAlreadyInstalled(installedXcode)
                         }
 
-                        return self.downloadXcode(version: latestNonPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, output: output)
+                        return self.downloadXcode(version: latestNonPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output)
                     }
             case .latestPrerelease:
                 Current.logging.log("Updating...")
                 
-                return update()
+                return update(shouldCache: shouldCache)
                     .then { availableXcodes -> Promise<(Xcode, URL)> in
                         guard let latestPrereleaseXcode = availableXcodes
                             .filter({ $0.version.isPrerelease })
@@ -257,14 +257,14 @@ public final class XcodeInstaller {
                             throw Error.versionAlreadyInstalled(installedXcode)
                         }
                         
-                        return self.downloadXcode(version: latestPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, output: output)
+                        return self.downloadXcode(version: latestPrereleaseXcode.version, downloader: downloader, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output)
                     }
             case .path(let versionString, let path):
                 guard let version = Version(xcodeVersion: versionString) ?? versionFromXcodeVersionFile() else {
                     throw Error.invalidVersion(versionString)
                 }
                 if !shouldInstall {
-                    return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, output: output)
+                    return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output)
                 } else {
                     let xcode = Xcode(version: version, url: path.url, filename: String(path.string.suffix(fromLast: "/")), releaseDate: nil)
                     return Promise.value((xcode, path.url))
@@ -276,7 +276,7 @@ public final class XcodeInstaller {
                 if let installedXcode = Current.files.installedXcodes().first(where: { $0.version.isEqualWithoutBuildMetadataIdentifiers(to: version) }) {
                     throw Error.versionAlreadyInstalled(installedXcode)
                 }
-                return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, output: output)
+                return self.downloadXcode(version: version, downloader: downloader, shouldInstall: shouldInstall, shouldCache: shouldCache, output: output)
             }
         }
     }
@@ -302,13 +302,13 @@ public final class XcodeInstaller {
         }
     }
 
-    private func downloadXcode(version: Version, downloader: Downloader, shouldInstall: Bool, output: Output) -> Promise<(Xcode, URL)> {
+    private func downloadXcode(version: Version, downloader: Downloader, shouldInstall: Bool, shouldCache: Bool, output: Output) -> Promise<(Xcode, URL)> {
         return firstly { () -> Promise<Version> in
             loginIfNeeded().map { version }
         }
         .then { version -> Promise<Version> in
             if self.xcodeList.shouldUpdate {
-                return self.xcodeList.update().map { _ in version }
+                return self.xcodeList.update(saving: shouldCache).map { _ in version }
             }
             else {
                 return Promise.value(version)
@@ -645,17 +645,17 @@ public final class XcodeInstaller {
         }
     }
 
-    func update() -> Promise<[Xcode]> {
+    func update(shouldCache: Bool) -> Promise<[Xcode]> {
         return firstly { () -> Promise<Void> in
             loginIfNeeded()
         }
         .then { () -> Promise<[Xcode]> in
-            self.xcodeList.update()
+            self.xcodeList.update(saving: shouldCache)
         }
     }
 
-    public func updateAndPrint(shouldPrintDates: Bool, searchPath: Path?) -> Promise<Void> {
-        update()
+    public func updateAndNSLog() -> Promise<Void> {
+        update(shouldCache: shouldCache)
             .then { xcodes -> Promise<Void> in
                 self.printAvailableXcodes(xcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates, searchPath: searchPath)
             }

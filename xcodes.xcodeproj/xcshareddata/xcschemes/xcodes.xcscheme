@@ -86,8 +86,12 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "update --path ~/Downloads/xcodes/"
-            isEnabled = "YES">
+            argument = "update --no-cache-save --path ~/Downloads/xcodes/"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "list --path ~/Downloads/xcodes/"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "unauthorize"
@@ -112,6 +116,10 @@
          <CommandLineArgument
             argument = "download 12.3 Release Candidate --aria2 /Users/art-divin/Documents/projects/XcodeUpdates/XcodeUpdatesInternal/XcodeUpdatesInternal/External/aria2c --path ~/Downloads/xcodes/12.2.xip --output json"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "update --path ~/Downloads/xcodes/"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

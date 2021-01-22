@@ -18,7 +18,7 @@ migrateApplicationSupportFiles()
 // But it doesn't even print the help without the user providing the --help flag,
 // so we need to tell it to do this explicitly
 var app: Command!
-app = Command(usage: "xcodes") { _, _ in print(GuakaConfig.helpGenerator.init(command: app).helpMessage) }
+app = Command(usage: "xcodes") { _, _ in NSLog().helpMessage) }
 
 func installed() -> Command {
     let installed = Command(usage: "installed",
@@ -75,7 +75,7 @@ func list() -> Command {
                 searchPath = Path(path)
             }
             if xcodeList.shouldUpdate {
-                return installer.updateAndPrint(shouldPrintDates: shouldPrintDates, searchPath: searchPath)
+                return installer.updateAndNSLog()
             }
             else {
                 return installer.printAvailableXcodes(xcodeList.availableXcodes, installed: Current.files.installedXcodes(), shouldPrintDates: shouldPrintDates, searchPath: searchPath)
@@ -95,20 +95,25 @@ func list() -> Command {
 
 func update() -> Command {
     let showDateFlag = Flag(longName: "print-dates", value: false, description: "Print release dates for each version")
+    let shouldCacheFlag = Flag(longName: "no-cache-save", value: false, description: "Cache Xcode version list")
     let pathFlag = Flag(longName: "path", type: String.self, description: "Local directory containing the downloaded Xcode .xip")
     return Command(usage: "update",
                    shortMessage: "Update the list of available versions of Xcode",
-                   flags: [showDateFlag, pathFlag]) { flags, _ in
+                   flags: [showDateFlag, shouldCacheFlag, pathFlag]) { flags, _ in
         firstly { () -> Promise<Void> in
             var shouldPrintDates = false
+            var shouldCache = true
             var searchPath : Path?
             if flags.getBool(name: "print-dates") == true {
                 shouldPrintDates = true
             }
+            if flags.getBool(name: "no-cache-save") == true {
+                shouldCache = false
+            }
             if let path = flags.getString(name: "path") {
                 searchPath = Path(path)
             }
-            return installer.updateAndPrint(shouldPrintDates: shouldPrintDates, searchPath: searchPath)
+            return installer.updateAndNSLog()
         }
         .catch { error in
             Current.logging.log(error.legibleLocalizedDescription)
