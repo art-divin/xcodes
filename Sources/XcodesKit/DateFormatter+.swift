@@ -12,6 +12,7 @@ extension DateFormatter {
     static let downloadsReleaseDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM d, yyyy"
+        formatter.locale = Locale(identifier: "en_US")
         return formatter
     }()
 }
